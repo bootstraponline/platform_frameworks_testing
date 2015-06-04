@@ -68,7 +68,7 @@ public final class DrawerActions {
    */
   public static void openDrawer(int drawerLayoutId, int gravity) {
     //if the drawer is already open, return.
-    if (checkDrawer(drawerLayoutId, isOpen())) {
+    if (checkDrawer(drawerLayoutId, isOpen(gravity))) {
       return;
     }
     onView(withId(drawerLayoutId))
@@ -92,7 +92,7 @@ public final class DrawerActions {
    */
   public static void closeDrawer(int drawerLayoutId, int gravity) {
     //if the drawer is already closed, return.
-    if (checkDrawer(drawerLayoutId, isClosed())) {
+    if (checkDrawer(drawerLayoutId, isClosed(gravity))) {
       return;
     }
     onView(withId(drawerLayoutId))
