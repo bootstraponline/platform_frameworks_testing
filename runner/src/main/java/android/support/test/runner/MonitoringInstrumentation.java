@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,8 @@ import android.support.test.runner.lifecycle.Stage;
 import android.util.Log;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -50,7 +52,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
@@ -60,6 +61,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static android.support.test.internal.util.Checks.checkMainThread;
+import static android.support.test.internal.util.Checks.checkNotMainThread;
 
 /**
  * An instrumentation that enables several advanced features and makes some hard guarantees about
@@ -185,6 +189,12 @@ public class MonitoringInstrumentation extends ExposedInstrumentationApi {
     public void onStart() {
         super.onStart();
 
+        runOnMainSync(new Runnable() {
+            @Override
+            public void run() {
+                tryLoadingJsBridge();
+            }});
+
         // Due to the way Android initializes instrumentation - all instrumentations have the
         // possibility of seeing the Application and its classes in an inconsistent state.
         // Specifically ActivityThread creates Instrumentation first, initializes it, and calls
@@ -281,7 +291,7 @@ public class MonitoringInstrumentation extends ExposedInstrumentationApi {
 
     @Override
     public Activity startActivitySync(final Intent intent) {
-        validateNotAppThread();
+        checkNotMainThread();
         long lastIdleTimeBeforeLaunch = mLastIdleTime.get();
 
         if (mAnActivityHasBeenLaunched.compareAndSet(false, true)) {
@@ -327,13 +337,6 @@ public class MonitoringInstrumentation extends ExposedInstrumentationApi {
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("interrupted", ie);
-        }
-    }
-
-    private void validateNotAppThread() {
-        if (mMainThread.equals(Thread.currentThread())) {
-            throw new RuntimeException(
-                    "this method cannot be called from the main application thread");
         }
     }
 
@@ -570,6 +573,29 @@ public class MonitoringInstrumentation extends ExposedInstrumentationApi {
                 parent,
                 id,
                 lastNonConfigurationInstance);
+    }
+
+    /**
+     * Loads the JS Bridge for Espresso Web. Only call this method from the main thread!
+     */
+    private void tryLoadingJsBridge() {
+        checkMainThread();
+        try {
+            Class<?> jsBridge = Class.forName(
+                    "android.support.test.espresso.web.bridge.JavaScriptBridge");
+            Method install = jsBridge.getDeclaredMethod("installBridge");
+            install.invoke(null);
+        } catch (ClassNotFoundException ignored) {
+            Log.i(LOG_TAG, "No JSBridge.", ignored);
+        } catch (NoSuchMethodException nsme) {
+            Log.i(LOG_TAG, "No JSBridge.", nsme);
+        } catch (InvocationTargetException ite) {
+            throw new RuntimeException(
+                    "JSbridge is available at runtime, but calling it failed.", ite);
+        } catch (IllegalAccessException iae) {
+            throw new RuntimeException(
+                    "JSbridge is available at runtime, but calling it failed.", iae);
+        }
     }
 
     /**

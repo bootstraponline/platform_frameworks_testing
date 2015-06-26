@@ -23,9 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.hamcrest.Matchers.any;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.support.test.espresso.web.bridge.JavaScriptBridge;
 import android.support.test.internal.runner.tracker.UsageTrackerRegistry;
 import android.support.test.espresso.UiController;
 import android.support.test.espresso.ViewAction;
@@ -60,7 +57,6 @@ import android.support.annotation.Nullable;
  */
 public final class Web {
   static {
-    installBridgeOnMainThread();
     UsageTrackerRegistry.getInstance().trackUsage("Espresso-Web");
   }
 
@@ -84,16 +80,6 @@ public final class Web {
         checkNotNull(unit);
       }
     }
-  }
-
-  private static void installBridgeOnMainThread() {
-    Handler mainHandler = new Handler(Looper.getMainLooper());
-    mainHandler.post(new Runnable() {
-      @Override
-      public void run() {
-        JavaScriptBridge.installBridge();
-      }
-    });
   }
 
   /**

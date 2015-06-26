@@ -16,6 +16,8 @@
 
 package android.support.test.internal.util;
 
+import android.os.Looper;
+
 /**
  * Utility method for checking for null references
  */
@@ -70,6 +72,28 @@ public final class Checks {
             throw new IllegalStateException(
                     format(errorMessageTemplate, errorMessageArgs));
         }
+    }
+
+    /**
+     * Checks if the current thread is the main thread, otherwise throws.
+     *
+     * @throws IllegalStateException if current thread is not the main thread.
+     */
+    public static void checkMainThread() {
+        checkState(Thread.currentThread().equals(Looper.getMainLooper().getThread()),
+                "Method cannot be called off the main application thread (on: %s)",
+                Thread.currentThread().getName());
+    }
+
+    /**
+     * Checks if the current thread is not the main thread, otherwise throws.
+     *
+     * @throws IllegalStateException if current thread is the main thread.
+     */
+    public static void checkNotMainThread() {
+        checkState(!Thread.currentThread().equals(Looper.getMainLooper().getThread()),
+                "Method cannot be called on the main application thread (on: %s)",
+                Thread.currentThread().getName());
     }
 
     private static String format(String template, Object... args) {
