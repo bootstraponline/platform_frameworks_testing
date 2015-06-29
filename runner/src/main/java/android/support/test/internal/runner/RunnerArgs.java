@@ -147,6 +147,8 @@ public class RunnerArgs {
             this.disableAnalytics = parseBoolean(bundle.getString(ARGUMENT_DEBUG));
             this.appListeners.addAll(parseAndLoadClasses(bundle.getString(ARGUMENT_APP_LISTENER),
                     ApplicationLifecycleCallback.class));
+            this.codeCoverage = parseBoolean(bundle.getString(ARGUMENT_COVERAGE));
+            this.codeCoveragePath = bundle.getString(ARGUMENT_COVERAGE_PATH);
             return this;
         }
 
