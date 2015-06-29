@@ -146,8 +146,8 @@ public final class RecyclerViewActions {
    * @param itemViewMatcher a
    *     <a href="http://hamcrest.org/JavaHamcrest/javadoc/1.3/org/hamcrest/Matcher.html">
    *     <code>Matcher</code></a> that matches an item view in {@link RecyclerView}
-   * @param viewAction the action that is performed on the view matched by viewHolderMatcher
-   * @throws PerformException if there are more than one items matching given viewHolderMatcher.
+   * @param viewAction the action that is performed on the view matched by itemViewMatcher
+   * @throws PerformException if there are more than one items matching given itemViewMatcher.
    */
   public static <VH extends ViewHolder> PositionableRecyclerViewAction actionOnItem(
       final Matcher<View> itemViewMatcher, final ViewAction viewAction) {
