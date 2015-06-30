@@ -51,6 +51,11 @@ public class IntentsTestRule<T extends Activity> extends ActivityTestRule<T> {
         super(activityClass, initialTouchMode);
     }
 
+    public IntentsTestRule(Class<T> activityClass, boolean initialTouchMode,
+                            boolean launchActivity) {
+        super(activityClass, initialTouchMode, launchActivity);
+    }
+
     @Override
     protected void afterActivityLaunched() {
         Intents.init();
