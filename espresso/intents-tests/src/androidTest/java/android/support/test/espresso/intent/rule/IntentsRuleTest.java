@@ -22,6 +22,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.model.Statement;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.runner.intent.IntentStubberRegistry;
 
@@ -55,6 +57,65 @@ public class IntentsRuleTest {
 
     // Check that Intents was released.
     assertThat(IntentStubberRegistry.isLoaded(), is(false));
+  }
+
+  @Test
+  public void withNoLaunchConstructor_WillNotBeInitializedAfterCreation() {
+    new IntentsTestRule<>(StubActivity.class, false, false);
+
+    assertThat(IntentStubberRegistry.isLoaded(), is(false));
+  }
+
+  @Test
+  public void withNoLaunchConstructor_WillNotInitWithoutExplicitCallToLaunchActivity() {
+    IntentsTestRule<StubActivity> intentsTestRule = new IntentsTestRule<>(StubActivity.class, false, false);
+
+    Statement base = new Statement() {
+      @Override
+      public void evaluate() throws Throwable {
+        assertThat(IntentStubberRegistry.isLoaded(), is(false));
+      }
+    };
+
+    intentsTestRule.apply(base, mDescriptionStub);
+  }
+
+  @Test
+  public void withNoLaunchConstructor_WillInitWithExplicitCallToLaunchActivity() {
+    final IntentsTestRule<StubActivity> intentsTestRule =
+            new IntentsTestRule<>(StubActivity.class, false, false);
+
+    Statement base = new Statement() {
+      @Override
+      public void evaluate() throws Throwable {
+        launchStubActivityWithRule(intentsTestRule);
+        assertThat(IntentStubberRegistry.isLoaded(), is(true));
+      }
+    };
+
+    intentsTestRule.apply(base, mDescriptionStub);
+  }
+
+  @Test
+  public void withNoLaunchConstructor_WillReleaseWithExplicitCallToLaunchActivity() {
+    final IntentsTestRule<StubActivity> intentsTestRule =
+            new IntentsTestRule<>(StubActivity.class, false, false);
+
+    Statement base = new Statement() {
+      @Override
+      public void evaluate() throws Throwable {
+        launchStubActivityWithRule(intentsTestRule);
+      }
+    };
+
+    intentsTestRule.apply(base, mDescriptionStub);
+
+    assertThat(IntentStubberRegistry.isLoaded(), is(false));
+  }
+
+  private void launchStubActivityWithRule(IntentsTestRule<StubActivity> intentsTestRule) {
+    Intent intent = new Intent(InstrumentationRegistry.getTargetContext(), StubActivity.class);
+    intentsTestRule.launchActivity(intent);
   }
 
   public static class StubActivity extends Activity {
