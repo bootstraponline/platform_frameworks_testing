@@ -16,7 +16,7 @@
 
 apply plugin: 'com.android.library'
 
-version = '2.2'
+version = espressoVersion
 group = 'com.android.support.test.espresso'
 
 apply from: "../../publish.gradle"
