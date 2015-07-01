@@ -274,8 +274,8 @@ public class AndroidJUnitRunner extends MonitoringInstrumentation {
      * Sets up listener to inject a delay between each test, if specified.
      */
     private void addDelayListener(RunnerArgs args, TestExecutor.Builder builder) {
-        if (args.delayMsec > 0) {
-            builder.addRunListener(new DelayInjector(args.delayMsec));
+        if (args.delayInMillis > 0) {
+            builder.addRunListener(new DelayInjector(args.delayInMillis));
         } else if (args.logOnly && Build.VERSION.SDK_INT < 16) {
             // On older platforms, collecting tests can fail for large volume of tests.
             // Insert a small delay between each test to prevent this

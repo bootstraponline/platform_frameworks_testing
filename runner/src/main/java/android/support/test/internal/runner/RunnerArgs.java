@@ -27,23 +27,23 @@ public class RunnerArgs {
 
     // constants for supported instrumentation arguments
     static final String ARGUMENT_TEST_CLASS = "class";
-    private static final String ARGUMENT_TEST_SIZE = "size";
+    static final String ARGUMENT_TEST_SIZE = "size";
     static final String ARGUMENT_LOG_ONLY = "log";
-    private static final String ARGUMENT_ANNOTATION = "annotation";
-    private static final String ARGUMENT_NOT_ANNOTATION = "notAnnotation";
-    private static final String ARGUMENT_NUM_SHARDS = "numShards";
-    private static final String ARGUMENT_SHARD_INDEX = "shardIndex";
-    private static final String ARGUMENT_DELAY_MSEC = "delay_msec";
-    private static final String ARGUMENT_COVERAGE = "coverage";
-    private static final String ARGUMENT_COVERAGE_PATH = "coverageFile";
-    private static final String ARGUMENT_SUITE_ASSIGNMENT = "suiteAssignment";
+    static final String ARGUMENT_ANNOTATION = "annotation";
+    static final String ARGUMENT_NOT_ANNOTATION = "notAnnotation";
+    static final String ARGUMENT_NUM_SHARDS = "numShards";
+    static final String ARGUMENT_SHARD_INDEX = "shardIndex";
+    static final String ARGUMENT_DELAY_IN_MILLIS = "delay_msec";
+    static final String ARGUMENT_COVERAGE = "coverage";
+    static final String ARGUMENT_COVERAGE_PATH = "coverageFile";
+    static final String ARGUMENT_SUITE_ASSIGNMENT = "suiteAssignment";
     static final String ARGUMENT_DEBUG = "debug";
-    private static final String ARGUMENT_LISTENER = "listener";
-    private static final String ARGUMENT_TEST_PACKAGE = "package";
+    static final String ARGUMENT_LISTENER = "listener";
+    static final String ARGUMENT_TEST_PACKAGE = "package";
     static final String ARGUMENT_TIMEOUT = "timeout_msec";
     static final String ARGUMENT_TEST_FILE = "testFile";
-    private static final String ARGUMENT_DISABLE_ANALYTICS = "disableAnalytics";
-    private static final String ARGUMENT_APP_LISTENER = "appListener";
+    static final String ARGUMENT_DISABLE_ANALYTICS = "disableAnalytics";
+    static final String ARGUMENT_APP_LISTENER = "appListener";
     // TODO: consider supporting 'count' from InstrumentationTestRunner
 
     // used to separate multiple fully-qualified test case class names
@@ -55,7 +55,7 @@ public class RunnerArgs {
     public final boolean suiteAssignment;
     public final boolean codeCoverage;
     public final String codeCoveragePath;
-    public final int delayMsec;
+    public final int delayInMillis;
     public final boolean logOnly;
     public final String testPackage;
     public final String testSize;
@@ -91,7 +91,7 @@ public class RunnerArgs {
         this.suiteAssignment = builder.suiteAssignment;
         this.codeCoverage = builder.codeCoverage;
         this.codeCoveragePath = builder.codeCoveragePath;
-        this.delayMsec = builder.delayMsec;
+        this.delayInMillis = builder.delayInMillis;
         this.logOnly = builder.logOnly;
         this.testPackage = builder.testPackage;
         this.testSize = builder.testSize;
@@ -111,7 +111,7 @@ public class RunnerArgs {
         private boolean suiteAssignment = false;
         private boolean codeCoverage = false;
         private String codeCoveragePath = null;
-        private int delayMsec = -1;
+        private int delayInMillis = -1;
         private boolean logOnly = false;
         private String testPackage = null;
         private String testSize = null;
@@ -131,7 +131,8 @@ public class RunnerArgs {
          */
         public Builder fromBundle(Bundle bundle) {
             this.debug = parseBoolean(bundle.getString(ARGUMENT_DEBUG));
-            this.delayMsec = parseUnsignedInt(bundle.get(ARGUMENT_DELAY_MSEC), ARGUMENT_DELAY_MSEC);
+            this.delayInMillis =
+                    parseUnsignedInt(bundle.get(ARGUMENT_DELAY_IN_MILLIS), ARGUMENT_DELAY_IN_MILLIS);
             this.tests.addAll(parseTestClasses(bundle.getString(ARGUMENT_TEST_CLASS)));
             this.tests.addAll(parseTestClassesFromFile(bundle.getString(ARGUMENT_TEST_FILE)));
             this.listeners.addAll(parseAndLoadClasses(bundle.getString(ARGUMENT_LISTENER),
@@ -149,6 +150,7 @@ public class RunnerArgs {
                     ApplicationLifecycleCallback.class));
             this.codeCoverage = parseBoolean(bundle.getString(ARGUMENT_COVERAGE));
             this.codeCoveragePath = bundle.getString(ARGUMENT_COVERAGE_PATH);
+            this.suiteAssignment = parseBoolean(bundle.getString(ARGUMENT_SUITE_ASSIGNMENT));
             return this;
         }
 
@@ -209,6 +211,8 @@ public class RunnerArgs {
                 if (intValue < 0) {
                     throw new NumberFormatException(name + " can not be negative");
                 }
+
+                return intValue;
             }
             return -1;
         }
