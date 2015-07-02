@@ -127,11 +127,11 @@ import org.junit.runner.notification.RunListener;
  * test execution. Useful for quickly obtaining info on the tests to be executed by an
  * instrumentation command.
  * <p/>
- * <b>To generate EMMA code coverage:</b>
+ * <b>To generate code coverage files (*.ec) that can be used by EMMA or JaCoCo:</b>
  * -e coverage true
- * Note: this requires an emma instrumented build. By default, the code coverage results file
- * will be saved in a /data/<app>/coverage.ec file, unless overridden by coverageFile flag (see
- * below)
+ * Note: For this to work, your classes have to be instrumented offline (i.e. at build time) by
+ * EMMA/JaCoCo. By default, the code coverage results file will be saved in a
+ * /data/data/<app>/files/coverage.ec file, unless overridden by coverageFile flag (see below)
  * <p/>
  * <b> To specify EMMA code coverage results file path:</b>
  * -e coverageFile /sdcard/myFile.ec
