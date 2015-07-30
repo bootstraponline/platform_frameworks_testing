@@ -81,6 +81,9 @@ public class TimeoutTest {
         assertEquals(2, result.getRunCount());
     }
 
+    /**
+     * Ensure that the combination of timing out and passing tests are all reported correctly
+     */
     @Test
     public void testTimeoutInJUnit3Style() {
         Request request = mBuilder
@@ -90,8 +93,32 @@ public class TimeoutTest {
                 .getRequest();
         JUnitCore junitCore = new JUnitCore();
         Result result = junitCore.run(request);
+        assertEquals(3, result.getFailures().size());
         assertEquals(String.format("Test timed out after %s milliseconds", GLOBAL_ARG_TIMEOUT),
                 result.getFailures().get(0).getMessage());
+        assertEquals(String.format("Test timed out after %s milliseconds", GLOBAL_ARG_TIMEOUT),
+                result.getFailures().get(1).getMessage());
+        assertEquals(String.format("Test timed out after %s milliseconds", GLOBAL_ARG_TIMEOUT),
+                result.getFailures().get(2).getMessage());
+    }
+
+
+    /**
+     * Tests that don't timeout but still fail due to RuntimeException or Assertions should still
+     * propagate the correct error back to the user.
+     */
+    @Test
+    public void testJUnit3TimeoutTestsThatFailButNotTimeout() {
+        Request request = mBuilder
+                .addTestClass(JUnit3StyleClass.class.getName())
+                .setPerTestTimeout(200)
+                .build()
+                .getRequest();
+        JUnitCore junitCore = new JUnitCore();
+        Result result = junitCore.run(request);
+        assertEquals(2, result.getFailures().size());
+        assertEquals("This is a failing Test", result.getFailures().get(0).getMessage());
+        assertEquals("Test threw RuntimeException", result.getFailures().get(1).getMessage());
     }
 
     private Matcher<List<?>> isEmpty() {
@@ -166,6 +193,18 @@ public class TimeoutTest {
     public static class JUnit3StyleClass extends TestCase {
         public void testArgTimeoutInterrupts() throws InterruptedException {
             Thread.sleep(GLOBAL_ARG_TIMEOUT + 10);
+        }
+        public void testArgTimeoutInterruptsThatThrows() throws
+                InterruptedException {
+            Thread.sleep(GLOBAL_ARG_TIMEOUT + 10);
+            throw new RuntimeException("Test threw RuntimeException");
+        }
+        public void testArgTimeoutInterruptsThatFails() throws InterruptedException {
+            Thread.sleep(GLOBAL_ARG_TIMEOUT + 10);
+            fail("This is a failing Test");
+        }
+        public void testPassingTest() {
+            // pass
         }
     }
 }

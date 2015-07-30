@@ -20,9 +20,13 @@ import android.os.Bundle;
 import android.test.AndroidTestCase;
 import android.test.InstrumentationTestCase;
 
+import junit.framework.AssertionFailedError;
+import junit.framework.Protectable;
 import junit.framework.TestCase;
 import junit.framework.TestResult;
 import junit.framework.Test;
+
+import java.util.concurrent.TimeoutException;
 
 /**
  * A specialized {@link TestResult} that injects Android constructs into the test if necessary.
@@ -31,6 +35,8 @@ class AndroidTestResult extends DelegatingTestResult {
 
     private final Instrumentation mInstr;
     private final Bundle mBundle;
+
+    private long mTimeout;
 
     AndroidTestResult(Bundle bundle, Instrumentation instr, TestResult result) {
         super(result);
@@ -50,11 +56,38 @@ class AndroidTestResult extends DelegatingTestResult {
     }
 
     /**
-     * Notify of test failure and finish execution to successfully report back to
-     * instrumentation results
+     * Save the timeout value to be able to report a more user friendly error in case a timed
+     * out test.
+     *
+     * @param timeout the timeout value
+     * @see #runProtected(Test, Protectable)
      */
-    void notifyFailureAndFinish(Test test, Throwable throwable) {
-        addError(test, throwable);
-        endTest(test);
+    void setCurrentTimeout(long timeout) {
+        mTimeout = timeout;
+    }
+
+    /**
+     * Timeout aware copy of {@link TestResult#runProtected(Test, Protectable)}. In case of a timed
+     * out test an {@link InterruptedException} will be thrown and handled to report a more user
+     * friendly error back to the user.
+     */
+    @Override
+    public void runProtected(final Test test, Protectable p) {
+        try {
+            p.protect();
+        }
+        catch (AssertionFailedError e) {
+            super.addFailure(test, e);
+        }
+        catch (ThreadDeath e) { // don't catch ThreadDeath by accident
+            throw e;
+        }
+        catch (InterruptedException e) {
+            super.addError(test, new TimeoutException(String.format(
+                    "Test timed out after %d milliseconds", mTimeout)));
+        }
+        catch (Throwable e) {
+            super.addError(test, e);
+        }
     }
 }
