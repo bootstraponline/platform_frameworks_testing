@@ -19,7 +19,6 @@ package android.support.test.rule;
 import android.os.Looper;
 import android.support.test.annotation.Beta;
 import android.support.test.annotation.UiThreadTest;
-import android.test.suitebuilder.annotation.SmallTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -33,7 +32,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.runner.JUnitCore.runClasses;
 
 @Beta
-@SmallTest
 public class UiThreadTestRuleTest {
 
     @Rule

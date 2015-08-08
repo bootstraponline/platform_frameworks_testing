@@ -15,22 +15,18 @@
  */
 package android.support.test.internal.runner.listener;
 
-import android.test.suitebuilder.annotation.SmallTest;
-
+import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * Simple test to check that specifying a
  * <a href="http://junit.org/javadoc/latest/org/junit/runner/notification/RunListener.html">
  * <code>RunListener</code></a> via a meta-data tag in manifest works.
  */
-@SmallTest
 public class ManifestListenerTest {
 
     @Test
     public void testListenerInvoked() {
-        assertTrue(ManifestListener.isRunStarted());
+        Assert.assertTrue(ManifestListener.isRunStarted());
     }
 }

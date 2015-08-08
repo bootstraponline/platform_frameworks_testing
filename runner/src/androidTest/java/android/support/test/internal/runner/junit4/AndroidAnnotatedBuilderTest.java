@@ -18,7 +18,6 @@ package android.support.test.internal.runner.junit4;
 
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.internal.util.AndroidRunnerParams;
-import android.test.suitebuilder.annotation.SmallTest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,7 +33,6 @@ import java.lang.reflect.InvocationTargetException;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-@SmallTest
 public class AndroidAnnotatedBuilderTest {
     RunnerBuilder mMockRunnerBuilder;
     AndroidRunnerParams mMockAndroidRunnerParams;

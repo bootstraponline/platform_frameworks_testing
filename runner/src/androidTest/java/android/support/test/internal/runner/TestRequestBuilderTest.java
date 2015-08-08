@@ -47,7 +47,6 @@ import static android.support.test.InstrumentationRegistry.getInstrumentation;
 /**
  * Unit tests for {@link TestRequestBuilder}.
  */
-@SmallTest
 public class TestRequestBuilderTest {
 
     public static class SampleTest {

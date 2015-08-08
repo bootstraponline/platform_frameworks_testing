@@ -16,8 +16,6 @@ package android.support.test;
  */
 
 
-import android.test.suitebuilder.annotation.SmallTest;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,7 +25,6 @@ import org.junit.Test;
  * Intended to ensure test objects references are not retained by runner, and can get garbage
  * collected.
  */
-@SmallTest
 public class JUnit4HogTest {
 
     @SuppressWarnings("unused")

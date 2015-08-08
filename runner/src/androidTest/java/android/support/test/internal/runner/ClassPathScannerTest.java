@@ -19,7 +19,6 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.internal.runner.ClassPathScanner.ExcludePackageNameFilter;
 import android.support.test.internal.runner.ClassPathScanner.ExternalClassNameFilter;
 import android.support.test.internal.runner.ClassPathScanner.InclusivePackageNameFilter;
-import android.test.suitebuilder.annotation.SmallTest;
 
 import dalvik.system.DexFile;
 
@@ -36,7 +35,6 @@ import java.util.Vector;
 /**
  * Unit tests for {@link ClassPathScanner}.
  */
-@SmallTest
 public class ClassPathScannerTest {
 
     private ClassPathScanner mClassPathScanner;

@@ -15,8 +15,6 @@
  */
 package android.support.test.internal.runner;
 
-import android.test.suitebuilder.annotation.SmallTest;
-
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
@@ -28,7 +26,6 @@ import org.junit.runners.Parameterized;
 /**
  * Unit tests for {@link TestLoader}.
  */
-@SmallTest
 public class TestLoaderTest {
 
     public static class JUnit3Test extends TestCase {
