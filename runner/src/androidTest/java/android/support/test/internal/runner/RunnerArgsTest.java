@@ -16,30 +16,31 @@
 package android.support.test.internal.runner;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.support.test.runner.AndroidJUnitRunner;
+import android.test.suitebuilder.annotation.SmallTest;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.Runner;
-import org.mockito.Mockito;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 /**
  * Unit tests for {@link android.support.test.internal.runner.RunnerArgs}.
  */
+@SmallTest
 public class RunnerArgsTest {
 
     /**
@@ -83,7 +84,7 @@ public class RunnerArgsTest {
     }
 
     /**
-     * Test {@link android.support.test.runner.AndroidJUnitRunner#buildRequest(android.os.Bundle, java.io.PrintStream)} when
+     * Test {@link android.support.test.internal.runner.RunnerArgs.Builder#fromBundle(Bundle)} when
      * class name and method name is provided along with an additional class name.
      */
     @Test
@@ -187,6 +188,47 @@ public class RunnerArgsTest {
         b.putString(RunnerArgs.ARGUMENT_LOG_ONLY, "blargh");
         args = new RunnerArgs.Builder().fromBundle(b).build();
         assertFalse(args.logOnly);
+    }
+
+    @Test
+    public void testFromBundle_allFieldsAreSupported() throws Exception {
+        RunnerArgs defaultValues = new RunnerArgs.Builder().build();
+
+        Bundle b = new Bundle();
+        b.putString(RunnerArgs.ARGUMENT_ANNOTATION, "annotation");
+        b.putString(
+                RunnerArgs.ARGUMENT_APP_LISTENER,
+                "android.support.test.internal.runner.lifecycle.AppLifecycleListener");
+        b.putString(RunnerArgs.ARGUMENT_COVERAGE, "true");
+        b.putString(RunnerArgs.ARGUMENT_COVERAGE_PATH, "coveragePath");
+        b.putString(RunnerArgs.ARGUMENT_DEBUG, "true");
+        b.putString(RunnerArgs.ARGUMENT_DELAY_IN_MILLIS, "100");
+        b.putString(RunnerArgs.ARGUMENT_DISABLE_ANALYTICS, "true");
+        b.putString(RunnerArgs.ARGUMENT_LISTENER, "org.junit.runner.notification.RunListener");
+        b.putString(RunnerArgs.ARGUMENT_LOG_ONLY, "true");
+        b.putString(RunnerArgs.ARGUMENT_NOT_ANNOTATION, "notAnnotation");
+        b.putString(RunnerArgs.ARGUMENT_SHARD_INDEX, "1");
+        b.putString(RunnerArgs.ARGUMENT_SUITE_ASSIGNMENT, "true");
+        b.putString(RunnerArgs.ARGUMENT_TEST_CLASS, "test.Class");
+        b.putString(RunnerArgs.ARGUMENT_TEST_PACKAGE, "test.package");
+        b.putString(RunnerArgs.ARGUMENT_TEST_SIZE, "medium");
+        b.putString(RunnerArgs.ARGUMENT_TIMEOUT, "100");
+
+        RunnerArgs fromBundle = new RunnerArgs.Builder().fromBundle(b).build();
+
+        // Parsing of testFile require a real file on the disk, leave out this one.
+        Collection<String> exceptions = Collections.singletonList("testFile");
+
+        for (Field field : RunnerArgs.class.getDeclaredFields()) {
+            if (Modifier.isStatic(field.getModifiers()) || exceptions.contains(field.getName())) {
+                continue;
+            }
+
+            assertNotEquals(
+                    String.format("Field %s not set in fromBundle", field.getName()),
+                    field.get(defaultValues),
+                    field.get(fromBundle));
+        }
     }
 
     /**
