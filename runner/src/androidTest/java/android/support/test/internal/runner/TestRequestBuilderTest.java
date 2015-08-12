@@ -15,6 +15,9 @@
  */
 package android.support.test.internal.runner;
 
+import static android.support.test.InstrumentationRegistry.getArguments;
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+
 import android.support.test.filters.RequiresDevice;
 import android.support.test.filters.SdkSuppress;
 import android.support.test.internal.runner.TestRequestBuilder.DeviceBuild;
@@ -26,7 +29,9 @@ import junit.framework.TestCase;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
@@ -40,9 +45,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.Collection;
-
-import static android.support.test.InstrumentationRegistry.getArguments;
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
 
 /**
  * Unit tests for {@link TestRequestBuilder}.
@@ -751,21 +753,286 @@ public class TestRequestBuilderTest {
     }
 
     /**
+     * Verify filter include method but filter class leaves no tests.
+     */
+    @Test
+    public void testFilterClassAddMethod() {
+        Request request = mBuilder
+                .addTestMethod(SampleTest.class.getName(), "testSmall")
+                .removeTestClass(SampleTest.class.getName())
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(0, result.getRunCount());
+    }
+
+    /**
+     * Verify that including and excluding different methods leaves 1 method.
+     */
+    @Test
+    public void testMethodAndNotMethod_different() {
+        Request request = mBuilder
+                .removeTestMethod(SampleTest.class.getName(), "testSmall")
+                .addTestMethod(SampleTest.class.getName(), "testOther")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
+    }
+
+    /**
+     * Verify that including and excluding the same method leaves no tests.
+     */
+    @Test
+    public void testMethodAndNotMethod_same() {
+        Request request = mBuilder
+                .removeTestMethod(SampleTest.class.getName(), "testSmall")
+                .addTestMethod(SampleTest.class.getName(), "testSmall")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(0, result.getRunCount());
+    }
+
+    /**
+     * Verify that filtering out all but one test in a class gives one test
+     */
+    @Test
+    public void testClassAndMethod() {
+        Request request = mBuilder
+                .addTestClass(SampleTest.class.getName())
+                .addTestMethod(SampleTest.class.getName(), "testSmall")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
+    }
+
+    /**
+     * Verify that including and excluding different classes leaves that class's methods.
+     */
+    @Test
+    public void testClassAndNotClass_different() {
+        Request request = mBuilder
+                .addTestClass(SampleTest.class.getName())
+                .removeTestClass(SampleClassSize.class.getName())
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(2, result.getRunCount());
+    }
+
+    /**
+     * Verify that including and excluding the same class leaves no tests.
+     */
+    @Test
+    public void testClassAndNotClass_same() {
+        Request request = mBuilder
+                .addTestClass(SampleTest.class.getName())
+                .removeTestClass(SampleTest.class.getName())
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(0, result.getRunCount());
+    }
+
+    /**
+     * Verify that filtering out a single test in a class leaves the rest
+     */
+    @Test
+    public void testClassAndNotMethod() {
+        Request request = mBuilder
+                .addTestClass(SampleTest.class.getName())
+                .removeTestMethod(SampleTest.class.getName(), "testSmall")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
+    }
+
+    /**
+     * Verify that filtering out a single test in a package leaves the rest
+     */
+    public void testPackageAndNotMethod() {
+        Request request = mBuilder
+                .addTestPackage("android.support.test.internal.runner")
+                .removeTestMethod(SampleTest.class.getName(), "testSmall")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
+    }
+
+    /**
+     * Verify that including and excluding different packages leaves that package's methods.
+     */
+    @Test
+    public void testPackageAndNotPackage_different() {
+        mBuilder.addApkToScan(getInstrumentation().getTargetContext().getPackageCodePath());
+        Request request = mBuilder
+                .addTestPackage("android.support.test")
+                .removeTestPackage("android.support.test.internal.runner")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(73, result.getRunCount());
+    }
+
+    /**
+     * Verify that including and excluding the same package leaves no tests.
+     */
+    @Test
+    public void testPackageAndNotPackage_same() {
+        mBuilder.addApkToScan(getInstrumentation().getTargetContext().getPackageCodePath());
+        Request request = mBuilder
+                .addTestPackage("android.support.test.internal.runner")
+                .removeTestPackage("android.support.test.internal.runner")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(0, result.getRunCount());
+    }
+
+    /**
      * Test exception is thrown when no apk path and no class has been provided
      */
     @Test(expected = IllegalArgumentException.class)
     public void testNoApkPath() throws Exception {
-        mBuilder.addTestPackageFilter("android.support.test.internal.runner")
+        mBuilder.addTestPackage("android.support.test.internal.runner")
                 .build();
     }
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+    private static final String EXCEPTION_MESSAGE =
+            "Ambiguous arguments: cannot provide both test package and test class(es) to run";
 
     /**
      * Test exception is thrown when both test package and class has been provided
      */
-    @Test(expected = IllegalArgumentException.class)
-    public void testBothPackageAndTestClass() throws Exception {
-        mBuilder.addTestPackageFilter("android.support.test.internal.runner")
+    @Test
+    public void testBothPackageAndClass() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(EXCEPTION_MESSAGE);
+        mBuilder.addTestPackage("android.support.test.internal.runner")
                 .addTestClass(SampleJUnit3Test.class.getName())
                 .build();
+    }
+
+    /**
+     * Test exception is thrown when both test package and notClass has been provided
+     */
+    @Test
+    public void testBothPackageAndNotClass() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(EXCEPTION_MESSAGE);
+        mBuilder.addTestPackage("android.support.test.internal.runner")
+                .removeTestClass(SampleTest.class.getName())
+                .build();
+    }
+
+    /**
+     * Test exception is thrown when both test package and method has been provided
+     */
+    @Test
+    public void testBothPackageAndMethod() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(EXCEPTION_MESSAGE);
+        mBuilder.addTestPackage("android.support.test.internal.runner")
+                .addTestMethod(SampleTest.class.getName(), "testSmall")
+                .build();
+    }
+
+    /**
+     * Test exception is thrown when both test package and notMethod has been provided
+     */
+    @Test
+    public void testBothPackageAndNotMethod() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(EXCEPTION_MESSAGE);
+        mBuilder.addTestPackage("android.support.test.internal.runner")
+                .removeTestMethod(SampleTest.class.getName(), "testSmall")
+                .build();
+    }
+
+    /**
+     * Test exception is thrown when test package, test class and test method has been provided
+     */
+    @Test
+    public void testPackageAndClassAndMethod() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(EXCEPTION_MESSAGE);
+        Request request = mBuilder
+                .addTestPackage("android.support.test.internal.runner")
+                .addTestMethod(SampleTest.class.getName(), "testSmall")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
+    }
+
+    /**
+     * Test exception is thrown when test package, test class and test notMethod has been provided
+     */
+    @Test
+    public void testPackageAndClassAndNotMethod() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(EXCEPTION_MESSAGE);
+        Request request = mBuilder
+                .addTestPackage("android.support.test.internal.runner")
+                .addTestClass(SampleTest.class.getName())
+                .removeTestMethod(SampleTest.class.getName(), "testSmall")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
+    }
+
+    /**
+     * Test exception is thrown when test package, test notClass and test method has been provided
+     */
+    @Test
+    public void testPackageAndNotClassAndMethod() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(EXCEPTION_MESSAGE);
+        Request request = mBuilder
+                .addTestPackage("android.support.test.internal.runner")
+                .removeTestClass(SampleClassSize.class.getName())
+                .addTestMethod(SampleTest.class.getName(), "testSmall")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
+    }
+
+    /**
+     * Test exception is thrown when test package, test notClass and test notMethod has been provided
+     */
+    @Test
+    public void testPackageAndNotClassAndNotMethod() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(EXCEPTION_MESSAGE);
+        Request request = mBuilder
+                .addTestPackage("android.support.test.internal.runner")
+                .removeTestClass(SampleClassSize.class.getName())
+                .removeTestMethod(SampleTest.class.getName(), "testSmall")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
     }
 }

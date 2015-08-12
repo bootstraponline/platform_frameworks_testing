@@ -67,15 +67,25 @@ public class TestRequestBuilder {
 
     static final String EMULATOR_HARDWARE = "goldfish";
 
+    // Excluded test packages
+    private static final String[] DEFAULT_EXCLUDED_PACKAGES = {
+            "junit",
+            "org.junit",
+            "org.hamcrest",
+            "org.mockito",// exclude Mockito for performance and to prevent JVM related errors
+            "android.support.test.internal.runner.junit3",// always skip AndroidTestSuite
+    };
+
     private List<String> mApkPaths = new ArrayList<String>();
     private TestLoader mTestLoader;
+    private Set<String> mIncludedPackages = new HashSet<>();
+    private Set<String> mExcludedPackages = new HashSet<>();
     private ClassAndMethodFilter mClassMethodFilter = new ClassAndMethodFilter();
     private Filter mFilter = new AnnotationExclusionFilter(Suppress.class)
             .intersect(new SdkSuppressFilter())
             .intersect(new RequiresDeviceFilter())
             .intersect(mClassMethodFilter);
     private boolean mSkipExecution = false;
-    private String mTestPackageName = null;
     private final DeviceBuild mDeviceBuild;
     private long mPerTestTimeout = 0;
     private final Instrumentation mInstr;
@@ -378,23 +388,33 @@ public class TestRequestBuilder {
     }
 
     /**
-     * A {@link Filter} to support the ability to filter out multiple classes#methodes combinations.
+     * A {@link Filter} to support the ability to filter out multiple class#method combinations.
      */
     private static class ClassAndMethodFilter extends Filter {
 
-        private Map<String, MethodFilter> mClassMethodFilterMap
-                = new HashMap<String, MethodFilter>();
+        private Set<String> mIncludedClasses = new HashSet<>();
+        private Set<String> mExcludedClasses = new HashSet<>();
+        private Map<String, MethodFilter> mMethodFilters = new HashMap<>();
 
         @Override
         public boolean shouldRun(Description description) {
-            if (mClassMethodFilterMap.isEmpty()) {
+            if (mIncludedClasses.isEmpty() && mExcludedClasses.isEmpty()
+                    && mMethodFilters.isEmpty()) {
                 return true;
             }
             if (description.isTest()) {
-                MethodFilter mf = mClassMethodFilterMap.get(description.getClassName());
-                if (mf != null) {
-                    return mf.shouldRun(description);
+                String className = description.getClassName();
+                // Test will be run iff it is not in the exclude set
+                if (mExcludedClasses.contains(className)) {
+                    return false;
                 }
+                MethodFilter methodFilter = mMethodFilters.get(className);
+                if (methodFilter != null) {
+                    return methodFilter.shouldRun(description);
+                }
+                // This test was not explicitly excluded, run it iff the include list is empty or it
+                // contains the test's class.
+                return mIncludedClasses.isEmpty() || mIncludedClasses.contains(className);
             } else {
                 // Check all children, if any
                 for (Description child : description.getChildren()) {
@@ -411,13 +431,30 @@ public class TestRequestBuilder {
             return "Class and method filter";
         }
 
-        public void add(String className, String methodName) {
-            MethodFilter mf = mClassMethodFilterMap.get(className);
+        public void addMethod(String className, String methodName) {
+            MethodFilter mf = mMethodFilters.get(className);
             if (mf == null) {
                 mf = new MethodFilter(className);
-                mClassMethodFilterMap.put(className, mf);
+                mMethodFilters.put(className, mf);
             }
             mf.add(methodName);
+        }
+
+        public void removeMethod(String className, String methodName) {
+            MethodFilter mf = mMethodFilters.get(className);
+            if (mf == null) {
+                mf = new MethodFilter(className);
+                mMethodFilters.put(className, mf);
+            }
+            mf.remove(methodName);
+        }
+
+        public void addClass(String className) {
+            mIncludedClasses.add(className);
+        }
+
+        public void removeClass(String className) {
+            mExcludedClasses.add(className);
         }
     }
 
@@ -427,7 +464,8 @@ public class TestRequestBuilder {
     private static class MethodFilter extends Filter {
 
         private final String mClassName;
-        private Set<String> mMethodNames = new HashSet<String>();
+        private Set<String> mIncludedMethods = new HashSet<>();
+        private Set<String> mExcludedMethods = new HashSet<>();
 
         /**
          * Constructs a method filter for a given class
@@ -449,7 +487,10 @@ public class TestRequestBuilder {
                 // Parameterized tests append "[#]" at the end of the method names.
                 // For instance, "getFoo" would become "getFoo[0]".
                 methodName = stripParameterizedSuffix(methodName);
-                return mMethodNames.contains(methodName);
+                if (mExcludedMethods.contains(methodName)) {
+                    return false;
+                }
+                return mIncludedMethods.isEmpty() || mIncludedMethods.contains(methodName);
             }
             // At this point, this could only be a description of this filter
             return true;
@@ -466,15 +507,19 @@ public class TestRequestBuilder {
         }
 
         public void add(String methodName) {
-            mMethodNames.add(methodName);
+            mIncludedMethods.add(methodName);
+        }
+
+        public void remove(String methodName) {
+            mExcludedMethods.add(methodName);
         }
     }
 
     /**
      * Creates a TestRequestBuilder
      *
-     * @param instr the {@link} Instrumentation to pass to applicable tests
-     * @param bundle the {@link} Bundle to pass to applicable tests
+     * @param instr the {@link Instrumentation} to pass to applicable tests
+     * @param bundle the {@link Bundle} to pass to applicable tests
      */
     public TestRequestBuilder(Instrumentation instr, Bundle bundle) {
         this(new DeviceBuildImpl(), instr, bundle);
@@ -513,24 +558,46 @@ public class TestRequestBuilder {
     }
 
     /**
-     * Add a test class to be executed. All test methods in this class will be executed.
+     * Add a test class to be executed. All test methods in this class will be executed, unless a
+     * test method was explicitly included or excluded.
      *
      * @param className
      */
     public TestRequestBuilder addTestClass(String className) {
         mTestLoader.loadClass(className);
+        mClassMethodFilter.addClass(className);
+        return this;
+    }
+
+    /**
+     * Excludes a test class. All test methods in this class will be excluded.
+     *
+     * @param className
+     */
+    public TestRequestBuilder removeTestClass(String className) {
+        mTestLoader.loadClass(className);
+        mClassMethodFilter.removeClass(className);
         return this;
     }
 
     /**
      * Adds a test method to run.
-     * <p/>
-     * Currently only supports one test method to be run.
      */
     public TestRequestBuilder addTestMethod(String testClassName, String testMethodName) {
         Class<?> clazz = mTestLoader.loadClass(testClassName);
         if (clazz != null) {
-            mClassMethodFilter.add(testClassName, testMethodName);
+            mClassMethodFilter.addMethod(testClassName, testMethodName);
+        }
+        return this;
+    }
+
+    /**
+     * Excludes a test method from being run.
+     */
+    public TestRequestBuilder removeTestMethod(String testClassName, String testMethodName) {
+        Class<?> clazz = mTestLoader.loadClass(testClassName);
+        if (clazz != null) {
+            mClassMethodFilter.removeMethod(testClassName, testMethodName);
         }
         return this;
     }
@@ -543,8 +610,21 @@ public class TestRequestBuilder {
      *
      * @param testPackage the fully qualified java package name
      */
-    public TestRequestBuilder addTestPackageFilter(String testPackage) {
-        mTestPackageName = testPackage;
+    public TestRequestBuilder addTestPackage(String testPackage) {
+        mIncludedPackages.add(testPackage);
+        return this;
+    }
+
+    /**
+     * Excludes all tests within given java package. Cannot be used in conjunction with
+     * addTestClass/Method.
+     * <p/>
+     * At least one addApkPath also must be provided.
+     *
+     * @param testPackage the fully qualified java package name
+     */
+    public TestRequestBuilder removeTestPackage(String testPackage) {
+        mExcludedPackages.add(testPackage);
         return this;
     }
 
@@ -624,8 +704,18 @@ public class TestRequestBuilder {
                 addTestMethod(test.testClassName, test.methodName);
             }
         }
-        if (runnerArgs.testPackage != null) {
-            addTestPackageFilter(runnerArgs.testPackage);
+        for (RunnerArgs.TestArg test : runnerArgs.notTests) {
+            if (test.methodName == null) {
+                removeTestClass(test.testClassName);
+            } else {
+                removeTestMethod(test.testClassName, test.methodName);
+            }
+        }
+        for (String pkg : runnerArgs.testPackages) {
+            addTestPackage(pkg);
+        }
+        for (String pkg : runnerArgs.notTestPackages) {
+            removeTestPackage(pkg);
         }
         if (runnerArgs.testSize != null) {
             addTestSizeFilter(runnerArgs.testSize);
@@ -680,7 +770,8 @@ public class TestRequestBuilder {
         // TODO: consider failing if both test classes and apk paths are given.
         // Right now that is allowed though
 
-        if (mTestPackageName != null && !mTestLoader.isEmpty()) {
+        if ((!mIncludedPackages.isEmpty() || !mExcludedPackages.isEmpty())
+                && !mTestLoader.isEmpty()) {
             throw new IllegalArgumentException("Ambiguous arguments: " +
                     "cannot provide both test package and test class(es) to run");
         }
@@ -724,20 +815,18 @@ public class TestRequestBuilder {
         ChainedClassNameFilter filter =   new ChainedClassNameFilter();
         // exclude inner classes
         filter.add(new ExternalClassNameFilter());
-        if (mTestPackageName != null) {
-            // request to run only a specific java package, honor that
-            filter.add(new InclusivePackageNameFilter(mTestPackageName));
-        } else {
-            // scan all packages, but exclude junit packages
-            filter.addAll(new ExcludePackageNameFilter("junit"),
-                    new ExcludePackageNameFilter("org.junit"),
-                    new ExcludePackageNameFilter("org.hamcrest"),
-                    // exclude Mockito to prevent JVM related errors and to improve performance
-                    new ExcludePackageNameFilter("org.mockito"),
-                    // always skip AndroidTestSuite
-                    new ExcludePackageNameFilter("android.support.test.internal.runner.junit3"));
+        for (String pkg : DEFAULT_EXCLUDED_PACKAGES) {
+            // Add the test packages to the exclude list unless they were explicity included.
+            if (!mIncludedPackages.contains(pkg)) {
+                mExcludedPackages.add(pkg);
+            }
         }
-
+        for (String pkg : mIncludedPackages) {
+            filter.add(new InclusivePackageNameFilter(pkg));
+        }
+        for (String pkg : mExcludedPackages) {
+            filter.add(new ExcludePackageNameFilter(pkg));
+        }
         try {
             return scanner.getClassPathEntries(filter);
         } catch (IOException e) {

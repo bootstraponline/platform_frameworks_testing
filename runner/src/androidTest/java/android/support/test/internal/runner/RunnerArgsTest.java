@@ -88,7 +88,7 @@ public class RunnerArgsTest {
      * class name and method name is provided along with an additional class name.
      */
     @Test
-    public void  testFromBundle_classAndMethodCombo() {
+    public void testFromBundle_classAndMethodCombo() {
         Bundle b = new Bundle();
         b.putString(RunnerArgs.ARGUMENT_TEST_CLASS, "ClassName1#method,ClassName2");
         RunnerArgs args = new RunnerArgs.Builder().fromBundle(b).build();
@@ -97,6 +97,110 @@ public class RunnerArgsTest {
         assertEquals("method", args.tests.get(0).methodName);
         assertEquals("ClassName2", args.tests.get(1).testClassName);
         assertNull(args.tests.get(1).methodName);
+    }
+
+    /**
+     * Simple test for parsing test class name
+     */
+    @Test
+    public void testFromBundle_notSingleClass() {
+        Bundle b = new Bundle();
+        b.putString(RunnerArgs.ARGUMENT_NOT_TEST_CLASS, "ClassName");
+        RunnerArgs args = new RunnerArgs.Builder().fromBundle(b).build();
+        assertEquals(1, args.notTests.size());
+        assertEquals("ClassName", args.notTests.get(0).testClassName);
+        assertNull(args.notTests.get(0).methodName);
+    }
+
+    /**
+     * Test parsing bundle when multiple class names are provided.
+     */
+    @Test
+    public void testFromBundle_notMultiClass() {
+        Bundle b = new Bundle();
+        b.putString(RunnerArgs.ARGUMENT_NOT_TEST_CLASS, "ClassName1,ClassName2");
+        RunnerArgs args = new RunnerArgs.Builder().fromBundle(b).build();
+        assertEquals(2, args.notTests.size());
+        assertEquals("ClassName1", args.notTests.get(0).testClassName);
+        assertEquals("ClassName2", args.notTests.get(1).testClassName);
+        assertNull(args.notTests.get(0).methodName);
+        assertNull(args.notTests.get(1).methodName);
+    }
+
+    /**
+     * Test parsing bundle when class name and method name is provided.
+     */
+    @Test
+    public void testFromBundle_notMethod() {
+        Bundle b = new Bundle();
+        b.putString(RunnerArgs.ARGUMENT_NOT_TEST_CLASS, "ClassName1#method");
+        RunnerArgs args = new RunnerArgs.Builder().fromBundle(b).build();
+        assertEquals("ClassName1", args.notTests.get(0).testClassName);
+        assertEquals("method", args.notTests.get(0).methodName);
+    }
+
+    /**
+     * Test {@link android.support.test.internal.runner.RunnerArgs.Builder#fromBundle(Bundle)} when
+     * class name and method name is provided along with an additional class name.
+     */
+    @Test
+    public void testFromBundle_notClassAndMethodCombo_different() {
+        Bundle b = new Bundle();
+        b.putString(RunnerArgs.ARGUMENT_NOT_TEST_CLASS, "ClassName1#method,ClassName2");
+        RunnerArgs args = new RunnerArgs.Builder().fromBundle(b).build();
+        assertEquals(2, args.notTests.size());
+        assertEquals("ClassName1", args.notTests.get(0).testClassName);
+        assertEquals("method", args.notTests.get(0).methodName);
+        assertEquals("ClassName2", args.notTests.get(1).testClassName);
+        assertNull(args.notTests.get(1).methodName);
+    }
+
+    /**
+     * Test {@link android.support.test.internal.runner.RunnerArgs.Builder#fromBundle(Bundle)} when
+     * class name and method name is provided along with the same class name again.
+     */
+    @Test
+    public void testFromBundle_notClassAndMethodCombo_same() {
+        Bundle b = new Bundle();
+        b.putString(RunnerArgs.ARGUMENT_NOT_TEST_CLASS, "ClassName1#method,ClassName1");
+        RunnerArgs args = new RunnerArgs.Builder().fromBundle(b).build();
+        assertEquals(2, args.notTests.size());
+        assertEquals("ClassName1", args.notTests.get(0).testClassName);
+        assertEquals("method", args.notTests.get(0).methodName);
+        assertEquals("ClassName1", args.notTests.get(1).testClassName);
+        assertNull(args.notTests.get(1).methodName);
+    }
+
+    /**
+     * Test parsing bundle when class name and not class name is provided.
+     */
+    @Test
+    public void testFromBundle_classAndNotClass_different() {
+        Bundle b = new Bundle();
+        b.putString(RunnerArgs.ARGUMENT_TEST_CLASS, "ClassName1");
+        b.putString(RunnerArgs.ARGUMENT_NOT_TEST_CLASS, "ClassName2#method");
+        RunnerArgs args = new RunnerArgs.Builder().fromBundle(b).build();
+        assertEquals(1, args.tests.size());
+        assertEquals(1, args.notTests.size());
+        assertEquals("ClassName1", args.tests.get(0).testClassName);
+        assertEquals("ClassName2", args.notTests.get(0).testClassName);
+        assertEquals("method", args.notTests.get(0).methodName);
+    }
+
+    /**
+     * Test parsing bundle when class name and not class name is provided.
+     */
+    @Test
+    public void testFromBundle_classAndNotClass_same() {
+        Bundle b = new Bundle();
+        b.putString(RunnerArgs.ARGUMENT_TEST_CLASS, "ClassName1");
+        b.putString(RunnerArgs.ARGUMENT_NOT_TEST_CLASS, "ClassName1#method");
+        RunnerArgs args = new RunnerArgs.Builder().fromBundle(b).build();
+        assertEquals(1, args.tests.size());
+        assertEquals(1, args.notTests.size());
+        assertEquals("ClassName1", args.tests.get(0).testClassName);
+        assertEquals("ClassName1", args.notTests.get(0).testClassName);
+        assertEquals("method", args.notTests.get(0).methodName);
     }
 
     /**
@@ -210,7 +314,9 @@ public class RunnerArgsTest {
         b.putString(RunnerArgs.ARGUMENT_SHARD_INDEX, "1");
         b.putString(RunnerArgs.ARGUMENT_SUITE_ASSIGNMENT, "true");
         b.putString(RunnerArgs.ARGUMENT_TEST_CLASS, "test.Class");
+        b.putString(RunnerArgs.ARGUMENT_NOT_TEST_CLASS, "test.NotClass");
         b.putString(RunnerArgs.ARGUMENT_TEST_PACKAGE, "test.package");
+        b.putString(RunnerArgs.ARGUMENT_NOT_TEST_PACKAGE, "test.notpackage");
         b.putString(RunnerArgs.ARGUMENT_TEST_SIZE, "medium");
         b.putString(RunnerArgs.ARGUMENT_TIMEOUT, "100");
 

@@ -27,6 +27,7 @@ public class RunnerArgs {
 
     // constants for supported instrumentation arguments
     static final String ARGUMENT_TEST_CLASS = "class";
+    static final String ARGUMENT_NOT_TEST_CLASS = "notClass";
     static final String ARGUMENT_TEST_SIZE = "size";
     static final String ARGUMENT_LOG_ONLY = "log";
     static final String ARGUMENT_ANNOTATION = "annotation";
@@ -40,6 +41,7 @@ public class RunnerArgs {
     static final String ARGUMENT_DEBUG = "debug";
     static final String ARGUMENT_LISTENER = "listener";
     static final String ARGUMENT_TEST_PACKAGE = "package";
+    static final String ARGUMENT_NOT_TEST_PACKAGE = "notPackage";
     static final String ARGUMENT_TIMEOUT = "timeout_msec";
     static final String ARGUMENT_TEST_FILE = "testFile";
     static final String ARGUMENT_DISABLE_ANALYTICS = "disableAnalytics";
@@ -57,13 +59,15 @@ public class RunnerArgs {
     public final String codeCoveragePath;
     public final int delayInMillis;
     public final boolean logOnly;
-    public final String testPackage;
+    public final List<String> testPackages;
+    public final List<String> notTestPackages;
     public final String testSize;
     public final String annotation;
     public final List<String> notAnnotations;
     public final long testTimeout;
     public final List<RunListener> listeners;
     public final List<TestArg> tests;
+    public final List<TestArg> notTests;
     public final int numShards;
     public final int shardIndex;
     public final boolean disableAnalytics;
@@ -93,13 +97,15 @@ public class RunnerArgs {
         this.codeCoveragePath = builder.codeCoveragePath;
         this.delayInMillis = builder.delayInMillis;
         this.logOnly = builder.logOnly;
-        this.testPackage = builder.testPackage;
+        this.testPackages = builder.testPackages;
+        this.notTestPackages = builder.notTestPackages;
         this.testSize = builder.testSize;
         this.annotation = builder.annotation;
         this.notAnnotations = Collections.unmodifiableList(builder.notAnnotations);
         this.testTimeout = builder.testTimeout;
         this.listeners = Collections.unmodifiableList(builder.listeners);
         this.tests = Collections.unmodifiableList(builder.tests);
+        this.notTests = Collections.unmodifiableList(builder.notTests);
         this.numShards = builder.numShards;
         this.shardIndex = builder.shardIndex;
         this.disableAnalytics = builder.disableAnalytics;
@@ -113,13 +119,15 @@ public class RunnerArgs {
         private String codeCoveragePath = null;
         private int delayInMillis = -1;
         private boolean logOnly = false;
-        private String testPackage = null;
+        private List<String> testPackages = new ArrayList<>();
+        private List<String> notTestPackages = new ArrayList<>();
         private String testSize = null;
         private String annotation = null;
         private List<String> notAnnotations = new ArrayList<String>();
         private long testTimeout = -1;
         private List<RunListener> listeners = new ArrayList<RunListener>();
-        private List<TestArg> tests = new ArrayList<TestArg>();
+        private List<TestArg> tests = new ArrayList<>();
+        private List<TestArg> notTests = new ArrayList<>();
         private int numShards = 0;
         private int shardIndex = 0;
         private boolean disableAnalytics = false;
@@ -135,9 +143,11 @@ public class RunnerArgs {
                     parseUnsignedInt(bundle.get(ARGUMENT_DELAY_IN_MILLIS), ARGUMENT_DELAY_IN_MILLIS);
             this.tests.addAll(parseTestClasses(bundle.getString(ARGUMENT_TEST_CLASS)));
             this.tests.addAll(parseTestClassesFromFile(bundle.getString(ARGUMENT_TEST_FILE)));
+            this.notTests.addAll(parseTestClasses(bundle.getString(ARGUMENT_NOT_TEST_CLASS)));
             this.listeners.addAll(parseAndLoadClasses(bundle.getString(ARGUMENT_LISTENER),
                     RunListener.class));
-            this.testPackage = bundle.getString(ARGUMENT_TEST_PACKAGE);
+            this.testPackages.addAll(parseTestPackages(bundle.getString(ARGUMENT_TEST_PACKAGE)));
+            this.notTestPackages.addAll(parseTestPackages(bundle.getString(ARGUMENT_NOT_TEST_PACKAGE)));
             this.testSize = bundle.getString(ARGUMENT_TEST_SIZE);
             this.annotation = bundle.getString(ARGUMENT_ANNOTATION);
             this.notAnnotations.addAll(parseStrings(bundle.getString(ARGUMENT_NOT_ANNOTATION)));
@@ -232,6 +242,22 @@ public class RunnerArgs {
                 return longValue;
             }
             return -1;
+        }
+
+        /**
+         * Parse test package data from given CSV data in following format
+         * com.android.foo,com.android.bar,...
+         *
+         * @return list of package names, empty list if input is null
+         */
+        private List<String> parseTestPackages(String packagesArg) {
+            List<String> packages = new ArrayList<>();
+            if (packagesArg != null) {
+                for (String packageName : packagesArg.split(String.valueOf(CLASS_SEPARATOR))) {
+                    packages.add(packageName);
+                }
+            }
+            return packages;
         }
 
         /**
@@ -332,6 +358,7 @@ public class RunnerArgs {
             try {
                 final Class<?> klass = Class.forName(className);
                 klass.getConstructor().setAccessible(true);
+                @SuppressWarnings("unchecked")
                 final T l =  (T) klass.newInstance();
                 objects.add(l);
             } catch (ClassNotFoundException e) {
