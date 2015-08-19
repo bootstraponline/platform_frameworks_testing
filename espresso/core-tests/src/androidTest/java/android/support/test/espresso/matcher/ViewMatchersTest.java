@@ -19,6 +19,7 @@ package android.support.test.espresso.matcher;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.hasContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
+import static android.support.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static android.support.test.espresso.matcher.ViewMatchers.hasImeAction;
 import static android.support.test.espresso.matcher.ViewMatchers.hasLinks;
 import static android.support.test.espresso.matcher.ViewMatchers.hasSibling;
@@ -607,6 +608,27 @@ public class ViewMatchersTest extends InstrumentationTestCase {
   public void testWithSpinnerTextNull() {
     try {
       withSpinnerText((Matcher<String>) null);
+      fail("Should of thrown NPE");
+    } catch (NullPointerException e) {
+      // Good, this is expected.
+    }
+  }
+
+  public void testHasErrorTextReturnsTrue_WithCorrectErrorString() {
+    EditText editText = new EditText(context);
+    editText.setError("TEST");
+    assertTrue(hasErrorText("TEST").matches(editText));
+  }
+
+  public void testHasErrorTextReturnsFalse_WithDifferentErrorString() {
+    EditText editText = new EditText(context);
+    editText.setError("TEST");
+    assertFalse(hasErrorText("TEST1").matches(editText));
+  }
+
+  public void testHasErrorTextShouldFail_WithNullString() {
+    try {
+      hasErrorText((Matcher<String>) null);
       fail("Should of thrown NPE");
     } catch (NullPointerException e) {
       // Good, this is expected.

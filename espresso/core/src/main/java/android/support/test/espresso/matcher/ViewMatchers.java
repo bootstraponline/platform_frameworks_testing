@@ -38,6 +38,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.webkit.WebView;
 import android.widget.Checkable;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -1109,5 +1110,34 @@ public final class ViewMatchers {
         return webView.getSettings().getJavaScriptEnabled();
       }
     };
+  }
+
+  /**
+   * Returns a matcher that matches {@link EditText} based on edit text error string value.
+   */
+  public static Matcher<View> hasErrorText(final Matcher<String> stringMatcher) {
+    checkNotNull(stringMatcher);
+    return new BoundedMatcher<View, EditText>(EditText.class) {
+
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("with error: ");
+        stringMatcher.describeTo(description);
+      }
+
+      @Override
+      protected boolean matchesSafely(EditText view) {
+        return stringMatcher.matches(view.getError().toString());
+      }
+    };
+  }
+
+  /**
+   * Returns a matcher that matches {@link EditText} based on edit text error string value.
+   *
+   * Note: Sugar for hasErrorText(is("string")).
+   */
+  public static Matcher<View> hasErrorText(final String expectedError) {
+    return hasErrorText(is(expectedError));
   }
 }
