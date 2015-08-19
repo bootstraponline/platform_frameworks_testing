@@ -21,8 +21,8 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.pressBack;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.DrawerActions.closeDrawer;
-import static android.support.test.espresso.contrib.DrawerActions.openDrawer;
+import static android.support.test.espresso.contrib.DrawerActions.close;
+import static android.support.test.espresso.contrib.DrawerActions.open;
 import static android.support.test.espresso.contrib.DrawerMatchers.isClosed;
 import static android.support.test.espresso.contrib.DrawerMatchers.isOpen;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -58,44 +58,30 @@ public class DrawerActionsIntegrationTest extends ActivityInstrumentationTestCas
   }
 
   public void testOpenAndCloseDrawer() {
-    // Drawer should not be open to start.
-    onView(withId(R.id.drawer_layout)).check(matches(isClosed()));
-
-    openDrawer(R.id.drawer_layout);
-
-    // The drawer should now be open.
-    onView(withId(R.id.drawer_layout)).check(matches(isOpen()));
-
-    closeDrawer(R.id.drawer_layout);
-
-    // Drawer should be closed again.
-    onView(withId(R.id.drawer_layout)).check(matches(isClosed()));
+    onView(withId(R.id.drawer_layout))
+        .check(matches(isClosed())) // Drawer should not be open to start.
+        .perform(open()) //
+        .check(matches(isOpen())) // The drawer should now be open.
+        .perform(close()) //
+        .check(matches(isClosed())); // Drawer should be closed again.
   }
 
   public void testOpenAndCloseDrawer_idempotent() {
-    // Drawer should not be open to start.
-    onView(withId(R.id.drawer_layout)).check(matches(isClosed()));
-
-    // Open drawer repeatedly.
-    openDrawer(R.id.drawer_layout);
-    openDrawer(R.id.drawer_layout);
-    openDrawer(R.id.drawer_layout);
-
-    // The drawer should be open.
-    onView(withId(R.id.drawer_layout)).check(matches(isOpen()));
-
-    // Close drawer repeatedly.
-    closeDrawer(R.id.drawer_layout);
-    closeDrawer(R.id.drawer_layout);
-    closeDrawer(R.id.drawer_layout);
-
-    // Drawer should be closed.
-    onView(withId(R.id.drawer_layout)).check(matches(isClosed()));
+    onView(withId(R.id.drawer_layout))
+        .check(matches(isClosed())) // Drawer should not be open to start.
+        .perform(open()) // Open drawer repeatedly.
+        .perform(open())
+        .perform(open())
+        .check(matches(isOpen())) // The drawer should be open.
+        .perform(close()) // Close drawer repeatedly.
+        .perform(close())
+        .perform(close())
+        .check(matches(isClosed())); // Drawer should be closed.
   }
 
   @SuppressWarnings("unchecked")
   public void testOpenDrawer_clickItem() {
-    openDrawer(R.id.drawer_layout);
+    onView(withId(R.id.drawer_layout)).perform(open());
 
     // Click an item in the drawer.
     int rowIndex = 2;
@@ -114,17 +100,14 @@ public class DrawerActionsIntegrationTest extends ActivityInstrumentationTestCas
 // in a flaky test. Therefore this test is commented out.
 //
 //  public void testOpenDrawer_closeBySwipeLeft() {
-//    openDrawer(R.id.drawer_layout);
-//
-//    // Swipe left to close drawer.
-//    onView(withId(R.id.drawer_layout)).perform(swipeLeft());
-//
-//    // Drawer should be closed.
-//    onView(withId(R.id.drawer_layout)).check(matches(isClosed()));
+//    onView(withId(R.id.drawer_layout))
+//        .perform(open())
+//        .perform(swipeLeft()) // Swipe left to close drawer.
+//        .check(matches(isClosed()) // Drawer should be closed.
 //  }
 
   public void testOpenDrawer_startNewActivity() {
-    openDrawer(R.id.drawer_layout);
+    onView(withId(R.id.drawer_layout)).perform(open());
 
     Intent displayActivity = new Intent().setClassName(getInstrumentation().getTargetContext(),
         "android.support.test.testapp.DisplayActivity");
@@ -132,7 +115,7 @@ public class DrawerActionsIntegrationTest extends ActivityInstrumentationTestCas
     displayActivity.putExtra(EXTRA_DATA, "Have a cup of Espresso.");
     getInstrumentation().startActivitySync(displayActivity);
 
-    onView(withId(R.id.display_data)).check(matches(withText(("Have a cup of Espresso."))));
+    onView(withId(R.id.display_data)).check(matches(withText("Have a cup of Espresso.")));
 
     // Going back to the previous activity
     pressBack();
@@ -142,7 +125,7 @@ public class DrawerActionsIntegrationTest extends ActivityInstrumentationTestCas
   }
 
   public void testOpenDrawer_rotateScreen() {
-    openDrawer(R.id.drawer_layout);
+    onView(withId(R.id.drawer_layout)).perform(open());
 
     // Rotate to landscape.
     setOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
