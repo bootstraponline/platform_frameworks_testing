@@ -335,7 +335,7 @@ public final class ViewMatchers {
             // view could be from a context unaware of the resource id.
           }
         }
-        if (null != expectedText) {
+        if (null != expectedText && null != view.getContentDescription()) {
           return expectedText.equals(view.getContentDescription().toString());
         } else {
           return false;
@@ -1134,7 +1134,7 @@ public final class ViewMatchers {
 
   /**
    * Returns a matcher that matches {@link EditText} based on edit text error string value.
-   *
+   * <p>
    * Note: Sugar for hasErrorText(is("string")).
    */
   public static Matcher<View> hasErrorText(final String expectedError) {

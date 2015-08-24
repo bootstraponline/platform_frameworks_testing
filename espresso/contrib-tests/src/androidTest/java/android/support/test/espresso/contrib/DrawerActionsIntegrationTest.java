@@ -60,9 +60,9 @@ public class DrawerActionsIntegrationTest extends ActivityInstrumentationTestCas
   public void testOpenAndCloseDrawer() {
     onView(withId(R.id.drawer_layout))
         .check(matches(isClosed())) // Drawer should not be open to start.
-        .perform(open()) //
+        .perform(open())
         .check(matches(isOpen())) // The drawer should now be open.
-        .perform(close()) //
+        .perform(close())
         .check(matches(isClosed())); // Drawer should be closed again.
   }
 

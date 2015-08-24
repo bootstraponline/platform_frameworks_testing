@@ -23,6 +23,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
 import android.support.test.filters.SdkSuppress;
+import android.support.test.espresso.NoActivityResumedException;
 
 import android.test.ActivityInstrumentationTestCase2;
 
@@ -39,12 +40,25 @@ public class TaskStackTest extends ActivityInstrumentationTestCase2<TaskStackAct
   }
 
   // The task stack behavior is available on API level 11 and up.
- @SdkSuppress(minSdkVersion=11)
+  @SdkSuppress(minSdkVersion=21)
   public void testTaskStack() {
     onView(withText("display activity")).check(matches(isDisplayed()));
     pressBack();
     onView(withText("tool bar activity")).check(matches(isDisplayed()));
     pressBack();
     onView(withText("drawer activity")).check(matches(isDisplayed()));
+  }
+
+  @SdkSuppress(minSdkVersion=21)
+  public void testBackExitsApp() throws InterruptedException {
+    onView(withText("display activity")).check(matches(isDisplayed()));
+    pressBack();
+    pressBack();
+    try {
+      pressBack();
+      fail("Should have exited the app and thrown a NoActivityResumedException");
+    } catch (NoActivityResumedException e) {
+      return;
+    }
   }
 }

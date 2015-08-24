@@ -77,16 +77,21 @@ public class MainActivity extends ListActivity {
     } else {
       for (ActivityInfo activityInfo : info.activities) {
 
-         // Only include Activities which are not the "MainActivity" and are part of the testapp
-         // package!
-         if (!activityInfo.name.equals(getComponentName().getClassName())
-            & activityInfo.name.contains(getComponentName().getPackageName())) {
-          String[] label = activityInfo.name.split(getPackageName() + ".");
+        // Only include Activities which are not the "MainActivity" and are part of the testapp
+        // package!
+        if (!activityInfo.name.equals(getComponentName().getClassName())
+                & activityInfo.name.contains(getComponentName().getPackageName())) {
+          CharSequence label = activityInfo.nonLocalizedLabel;
+          if (label == null || label.toString().isEmpty()) {
+            Log.w(TAG, "No label for Activity: " + activityInfo.name);
+            continue;
+          }
+          String[] name = activityInfo.name.split(getPackageName() + ".");
           try {
-            addItem(data, label[1],
+            addItem(data, name[1],
                 createActivityIntent(activityInfo.applicationInfo.packageName, activityInfo.name));
           } catch (ArrayIndexOutOfBoundsException aoobe) {
-            Log.e(TAG, "No label for Activity: " + activityInfo.name, aoobe);
+            Log.e(TAG, "No name for Activity: " + activityInfo.name, aoobe);
           }
         }
       }

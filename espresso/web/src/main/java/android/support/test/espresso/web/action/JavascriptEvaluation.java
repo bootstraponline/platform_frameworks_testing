@@ -204,7 +204,7 @@ final class JavascriptEvaluation {
               setException(ie.getCause());
             }
           }
-        }, MoreExecutors.sameThreadExecutor());
+        }, MoreExecutors.directExecutor());
 
       } else {
         unprepared.view.postDelayed(this, DELAY);

@@ -60,6 +60,8 @@
         <activity android:name="ToolbarActivity" android:label="tool bar activity" android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity android:name="TaskStackActivity" android:label="task stack activity"/>
         <activity android:name="DynamicWebViewActivity" android:label="browse the assets" android:windowSoftInputMode="adjustPan"/>
+        <activity android:name="TransitionActivityMain" android:label="transition activity" />
+        <activity android:name="TransitionDetailActivity" />
     </application>
 
     <uses-permission android:name="android.permission.CALL_PHONE"></uses-permission>

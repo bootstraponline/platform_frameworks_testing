@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,18 +16,15 @@
 
 package android.support.test.espresso.web.bridge;
 
-import android.support.test.espresso.web.deps.guava.util.concurrent.SettableFuture;
+import  android.support.test.espresso.web.deps.guava.util.concurrent.SettableFuture;
 
-import android.support.test.espresso.web.bridge.Conduit;
 import android.test.AndroidTestCase;
-import android.test.suitebuilder.annotation.SmallTest;
 
 import java.util.concurrent.ExecutionException;
 
 /**
  * Unit tests for JSBB.
  */
-@SmallTest
 public class JavaScriptBoundBridgeTest extends AndroidTestCase {
 
   private JavaScriptBoundBridge bridge;

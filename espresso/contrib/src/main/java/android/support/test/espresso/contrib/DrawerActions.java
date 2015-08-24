@@ -28,6 +28,7 @@ import android.support.test.espresso.PerformException;
 import android.support.test.espresso.UiController;
 import android.support.test.espresso.ViewAction;
 
+import android.support.annotation.Nullable;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.DrawerLayout.DrawerListener;
@@ -36,8 +37,6 @@ import android.view.View;
 import org.hamcrest.Matcher;
 
 import java.lang.reflect.Field;
-
-import android.support.annotation.Nullable;
 
 /**
  * Espresso actions for using a {@link DrawerLayout}.
@@ -52,6 +51,40 @@ public final class DrawerActions {
   }
 
   private static Field listenerField;
+
+  private abstract static class DrawerAction implements ViewAction {
+    @Override public final Matcher<View> getConstraints() {
+      return isAssignableFrom(DrawerLayout.class);
+    }
+
+    @Override public final void perform(UiController uiController, View view) {
+      DrawerLayout drawer = (DrawerLayout) view;
+
+      if (!checkAction().matches(drawer)) {
+        return;
+      }
+
+      DrawerListener listener = getDrawerListener(drawer);
+      IdlingDrawerListener idlingListener;
+      if (listener instanceof IdlingDrawerListener) {
+        idlingListener = (IdlingDrawerListener) listener;
+      } else {
+        idlingListener = IdlingDrawerListener.getInstance(listener);
+        drawer.setDrawerListener(idlingListener);
+        Espresso.registerIdlingResources(idlingListener);
+      }
+
+      performAction(drawer);
+      uiController.loopMainThreadUntilIdle();
+
+      Espresso.unregisterIdlingResources(idlingListener);
+      drawer.setDrawerListener(idlingListener.parentListener);
+      idlingListener.parentListener = null;
+    }
+
+    protected abstract Matcher<View> checkAction();
+    protected abstract void performAction(DrawerLayout view);
+  }
 
   /**
    * @deprecated Use {@link #open()} with {@code perform} after matching a view. This method will
@@ -147,40 +180,6 @@ public final class DrawerActions {
         view.closeDrawer(gravity);
       }
     };
-  }
-
-  private static abstract class DrawerAction implements ViewAction {
-    @Override public final Matcher<View> getConstraints() {
-      return isAssignableFrom(DrawerLayout.class);
-    }
-
-    @Override public final void perform(UiController uiController, View view) {
-      DrawerLayout drawer = (DrawerLayout) view;
-
-      if (!checkAction().matches(drawer)) {
-        return;
-      }
-
-      DrawerListener listener = getDrawerListener(drawer);
-      IdlingDrawerListener idlingListener;
-      if (listener instanceof IdlingDrawerListener) {
-        idlingListener = (IdlingDrawerListener) listener;
-      } else {
-        idlingListener = IdlingDrawerListener.getInstance(listener);
-        drawer.setDrawerListener(idlingListener);
-        Espresso.registerIdlingResources(idlingListener);
-      }
-
-      performAction(drawer);
-      uiController.loopMainThreadUntilIdle();
-
-      Espresso.unregisterIdlingResources(idlingListener);
-      drawer.setDrawerListener(idlingListener.parentListener);
-      idlingListener.parentListener = null;
-    }
-
-    protected abstract Matcher<View> checkAction();
-    protected abstract void performAction(DrawerLayout view);
   }
 
   /**

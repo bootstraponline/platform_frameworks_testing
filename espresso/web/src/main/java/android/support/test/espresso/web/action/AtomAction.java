@@ -121,7 +121,7 @@ public final class AtomAction<E> implements ViewAction {
               futureEval.setException(ie);
             }
           }
-        }, MoreExecutors.sameThreadExecutor());
+        }, MoreExecutors.directExecutor());
   }
 
   /**

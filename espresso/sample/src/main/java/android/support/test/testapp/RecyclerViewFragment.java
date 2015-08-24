@@ -155,7 +155,7 @@ public class RecyclerViewFragment extends Fragment implements OnItemTouchListene
     // nothing to do
   }
 
-  @Override
+  // TODO(user): uncomment once we are passed api 22 @Override
   public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
     // nothing to do
   }

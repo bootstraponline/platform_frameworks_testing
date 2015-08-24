@@ -78,7 +78,8 @@
             android:layout_gravity="center_horizontal"
             android:onClick="sendButtonClicked"
             android:text="@string/button_send"
-            android:layout_marginLeft="2dp" />
+            android:layout_marginLeft="2dp"
+            android:background="@drawable/abc_popup_background_mtrl_mult"/>
 
     </LinearLayout>
 </LinearLayout>

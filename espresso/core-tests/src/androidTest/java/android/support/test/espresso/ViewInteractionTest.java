@@ -55,7 +55,7 @@ public class ViewInteractionTest extends AndroidTestCase {
 
 
   private FailureHandler failureHandler;
-  private Executor testExecutor = MoreExecutors.sameThreadExecutor();
+  private Executor testExecutor = MoreExecutors.directExecutor();
 
   private ActivityLifecycleMonitor realLifecycleMonitor;
   private ViewInteraction testInteraction;

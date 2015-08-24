@@ -47,7 +47,7 @@ import android.support.annotation.Nullable;
  * An Entry Point to work with WebViews on Android.
  *
  * <p>Similar to onData, WebView interactions are actually composed of several ViewActions. However
- * they need to be properly orchestrated and are quite verbose. Web and WebInteraction wrap this
+ * they need to be properly orchastrated and are quite verbose. Web and WebInteraction wrap this
  * boilerplate and give an Espresso like feel to interacting with WebViews.
  *
  * <p>WebView interactions constantly cross the Java/Javascript boundary to do their work, since
@@ -314,7 +314,6 @@ public final class Web {
       checkState(!brandNew, "Perform or Check never called on this WebInteraction!");
       return result;
     }
-
     private static class ExceptionPropagator implements ViewAction {
       private RuntimeException error;
       public ExceptionPropagator(RuntimeException error) {

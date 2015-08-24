@@ -48,11 +48,11 @@ public final class ActivityLifecycles {
   /**
    * Indicates whether or not an Activity exists in our app within the "Visible Lifetime" state.
    *
-   * <p>The "Visible Lifetime" is defined as an activity who's onStart() method has been called but
-   * who's onStop() method has not been called.
+   * <p>The "Visible Lifetime" is defined as an activity where the onStart() method has been called
+   * but where the onStop() method has not been called.
    *
-   * <p>During this time, the Activity may be visible to the user, and it may be receiving input 
-   * from the user. This time is a superset of the "Foreground lifetime' of the activity.
+   * <p>During this time, the Activity may be visible to the user, and it may be receiving input
+   * from the user. This time is a superset of the "Foreground lifetime" of the activity.
    *
    * <p>It may be the case that an application has activities in the "visible lifetime" but none in
    * the "Foreground lifetime." It may be the case that without user input an activity will shortly
@@ -63,10 +63,31 @@ public final class ActivityLifecycles {
    * @return true if any activity exists within it's foreground lifetime.
    */
   public static boolean hasVisibleActivities(ActivityLifecycleMonitor monitor) {
-    return hasForegroundActivities(monitor)
-        || !monitor.getActivitiesInStage(Stage.RESTARTED).isEmpty()
+    return hasForegroundActivities(monitor) || hasTransitioningActivities(monitor);
+  }
+
+
+  /**
+   * Indicates whether or not an Activity, not in the foreground, exists in our app within the
+   * "Visible Lifetime" state.
+   *
+   * <p>The "Visible Lifetime" is defined as an activity where the onStart() method has been called
+   * but where the onStop() method has not been called.
+   *
+   * <p>During this time, the Activity may be visible to the user, and it may be receiving input
+   * from the user. This time is a superset of the "Foreground lifetime" of the activity.
+   *
+   * <p>It may be the case that an application has activities in the "visible lifetime" but none in
+   * the "Foreground lifetime." It may be the case that without user input an activity will shortly
+   * transition into the "Foreground lifetime" in this state, however it also may not transition
+   * without further user interaction.
+   *
+   * @param monitor the ActivityLifecycleMonitor to use
+   * @return true if any activity exists with a transitioning stage.
+   */
+  public static boolean hasTransitioningActivities(ActivityLifecycleMonitor monitor) {
+    return !monitor.getActivitiesInStage(Stage.RESTARTED).isEmpty()
         || !monitor.getActivitiesInStage(Stage.STARTED).isEmpty()
         || !monitor.getActivitiesInStage(Stage.PAUSED).isEmpty();
   }
-
 }
