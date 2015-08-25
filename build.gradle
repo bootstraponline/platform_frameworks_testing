@@ -244,7 +244,7 @@ subprojects {
             case 'com.android.build.gradle.AppPlugin':
                 project.android.ext.isLibrary = isAndroidLibrary
 
-                project.android.compileSdkVersion 21
+                project.android.compileSdkVersion compileSdkVersion
                 project.android.buildToolsVersion = buildToolsVersion
 
                 break;
