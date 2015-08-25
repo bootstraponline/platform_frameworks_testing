@@ -28,6 +28,7 @@ import android.support.test.testapp.R;
 
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
+import android.test.suitebuilder.annotation.Suppress;
 
 import junit.framework.AssertionFailedError;
 
@@ -47,6 +48,11 @@ public class LayoutAssertionsTest extends ActivityInstrumentationTestCase2<Layou
     getActivity();
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testAssertNoEllipsizedText() {
     try {
       onView(isRoot()).check(LayoutAssertions.noEllipsizedText());
@@ -54,6 +60,11 @@ public class LayoutAssertionsTest extends ActivityInstrumentationTestCase2<Layou
     fail("Ellipsized text is not detected");
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testAssertNoMultilineButtons() {
     onView(withId(R.id.wrap)).perform(click());
     try {
@@ -62,6 +73,11 @@ public class LayoutAssertionsTest extends ActivityInstrumentationTestCase2<Layou
     fail("Multiline button is not detected");
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testAssertNoOverlaps() {
     onView(withId(R.id.length)).perform(click());
     try {
@@ -70,6 +86,11 @@ public class LayoutAssertionsTest extends ActivityInstrumentationTestCase2<Layou
     fail("Overlaps are not detected");
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testAssertNoOverlapsViewNotFound() {
     onView(withId(R.id.length)).perform(click());
     try {

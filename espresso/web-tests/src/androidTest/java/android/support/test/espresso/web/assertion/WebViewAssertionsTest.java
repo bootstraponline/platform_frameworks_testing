@@ -36,6 +36,7 @@ import android.webkit.WebView;
 
 import junit.framework.AssertionFailedError;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -44,6 +45,8 @@ import org.junit.runner.RunWith;
 /**
  * Test case for Espresso web assertions.
  */
+@Ignore("Test only pass if run in isolation. Unless Gradle supports a single instrumentation per"
+        + "test these tests are ignored")
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class WebViewAssertionsTest {

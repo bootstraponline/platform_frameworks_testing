@@ -36,6 +36,7 @@ import android.support.test.testapp.SendActivity;
 
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
+import android.test.suitebuilder.annotation.Suppress;
 
 /**
  * {@link TypeTextAction} integration tests.
@@ -74,6 +75,11 @@ public class TypeTextActionIntegrationTest extends ActivityInstrumentationTestCa
         "Hello World How Are You Today? I have alot of text to type.Jolly good!")));
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testTypeTextInFocusedView_constraintBreakage() {
     onView(withId(is(R.id.send_data_to_call_edit_text))).perform(typeText(
         "Hello World How Are You Today? I have alot of text to type."));
@@ -95,6 +101,11 @@ public class TypeTextActionIntegrationTest extends ActivityInstrumentationTestCa
       .check(matches(withText(containsString(toType))));
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testTypeText_NonEnglish() {
     try {
       String toType = "在一个月之内的话";

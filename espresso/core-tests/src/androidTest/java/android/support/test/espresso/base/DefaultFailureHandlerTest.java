@@ -29,6 +29,7 @@ import android.support.test.espresso.ViewAssertion;
 import android.support.test.testapp.MainActivity;
 
 import android.test.ActivityInstrumentationTestCase2;
+import android.test.suitebuilder.annotation.Suppress;
 import android.view.View;
 
 import junit.framework.AssertionFailedError;
@@ -77,6 +78,11 @@ public class DefaultFailureHandlerTest extends ActivityInstrumentationTestCase2<
     }
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testNoMatchingViewException() {
     try {
       onView(withMatchesThatReturns(false)).check(matches(not(isDisplayed())));

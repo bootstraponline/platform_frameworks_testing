@@ -30,6 +30,7 @@ import android.support.test.testapp.SendActivity;
 
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
+import android.test.suitebuilder.annotation.Suppress;
 
 /**
  * {@link OpenLinkAction} integration tests.
@@ -49,7 +50,11 @@ public class OpenLinkActionTest extends ActivityInstrumentationTestCase2<SendAct
     getActivity();
   }
 
-
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testOpenLink_TargetViewNotSpanned() {
     try {
       onView(withId(R.id.send_title)).perform(scrollTo(), openLinkWithText("altavista.com"));
@@ -59,6 +64,11 @@ public class OpenLinkActionTest extends ActivityInstrumentationTestCase2<SendAct
     }
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testOpenLink_NoLinkFound() {
     try {
       onView(withId(R.id.spanned)).perform(scrollTo(), openLinkWithText("bacon"));

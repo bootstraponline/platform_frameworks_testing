@@ -41,6 +41,7 @@ import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.FlakyTest;
 import android.test.suitebuilder.annotation.LargeTest;
+import android.test.suitebuilder.annotation.Suppress;
 import android.view.KeyEvent;
 import android.widget.TextView;
 
@@ -62,6 +63,11 @@ public class KeyEventActionIntegrationTest extends ActivityInstrumentationTestCa
     super.setUp();
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   public void testClickBackOnRootAction() {
     getActivity();
     try {
@@ -93,6 +99,11 @@ public class KeyEventActionIntegrationTest extends ActivityInstrumentationTestCa
         .check(matches(isDisplayed()));
   }
 
+  /**
+   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
+   * per test this test is ignored"
+   */
+  @Suppress
   @SuppressWarnings("unchecked")
   @SdkSuppress(minSdkVersion=13)
   @FlakyTest
