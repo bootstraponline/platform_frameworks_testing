@@ -97,8 +97,8 @@ public final class ViewActions {
   }
 
   /**
-   * Performs all assertions in {@link #globalAssertions} and then performs the given
-   * {@code ViewAction}
+   * Performs all assertions before the {@code ViewAction}s in this class and then performs the
+   * given {@code ViewAction}
    *
    * @param viewAction the {@code ViewAction} to perform after the assertions
    */

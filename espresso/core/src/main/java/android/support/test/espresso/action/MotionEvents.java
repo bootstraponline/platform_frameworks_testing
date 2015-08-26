@@ -102,7 +102,7 @@ public final class MotionEvents {
         return new DownResultHolder(motionEvent, longPress);
       } catch (InjectEventSecurityException e) {
         throw new PerformException.Builder()
-          .withActionDescription("Send down montion event")
+          .withActionDescription("Send down motion event")
           .withViewDescription("unknown") // likely to be replaced by FailureHandler
           .withCause(e)
           .build();

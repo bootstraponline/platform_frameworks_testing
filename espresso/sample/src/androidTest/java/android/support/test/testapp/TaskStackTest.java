@@ -39,8 +39,8 @@ public class TaskStackTest extends ActivityInstrumentationTestCase2<TaskStackAct
     getActivity();
   }
 
-  // The task stack behavior is available on API level 21 and up.
-  @SdkSuppress(minSdkVersion=21)
+  // The task stack behavior is available on API level 11 and up.
+  @SdkSuppress(minSdkVersion=11)
   public void testTaskStack() {
     onView(withText("display activity")).check(matches(isDisplayed()));
     pressBack();
@@ -49,7 +49,7 @@ public class TaskStackTest extends ActivityInstrumentationTestCase2<TaskStackAct
     onView(withText("drawer activity")).check(matches(isDisplayed()));
   }
 
-  @SdkSuppress(minSdkVersion=21)
+  @SdkSuppress(minSdkVersion=11)
   public void testBackExitsApp() throws InterruptedException {
     onView(withText("display activity")).check(matches(isDisplayed()));
     pressBack();

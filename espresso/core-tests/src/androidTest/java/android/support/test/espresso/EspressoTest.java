@@ -21,6 +21,7 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.Espresso.openContextualActionModeOverflowMenu;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -31,6 +32,7 @@ import static org.hamcrest.Matchers.instanceOf;
 
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.testapp.ActionBarTestActivity;
+import android.support.test.testapp.KeyboardTestActivity;
 import android.support.test.testapp.MainActivity;
 import android.support.test.testapp.R;
 import android.support.test.testapp.SendActivity;
@@ -101,8 +103,11 @@ public class EspressoTest extends ActivityInstrumentationTestCase2<MainActivity>
 
       @Override
       public void perform(UiController uiController, View view) {
+        // This doesn't do anything if hardware keyboard is present - that is, soft keyboard
+        // is _not_ present. Whether it's present or not can be verified under the following
+        // device settings: Settings > Language & Input > Under Keyboard and input method
         InputMethodManager imm = (InputMethodManager) getInstrumentation().getTargetContext()
-          .getSystemService(Context.INPUT_METHOD_SERVICE);
+            .getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInput(view, 0);
         uiController.loopMainThreadUntilIdle();
       }
@@ -114,6 +119,25 @@ public class EspressoTest extends ActivityInstrumentationTestCase2<MainActivity>
     });
 
     onView(withId(R.id.enter_data_edit_text)).perform(ViewActions.closeSoftKeyboard());
+  }
+
+  /**
+   * for this test to be useful, hardware keyboard must be disabled. Thus, soft keyboard
+   * must be present.
+   */
+  public void testCloseSoftKeyboardRetry() {
+    onData(allOf(instanceOf(Map.class), hasValue(KeyboardTestActivity.class.getSimpleName())))
+        .perform(click());
+    // click on the edit text which bring the soft keyboard up
+    onView(withId(R.id.editTextUserInput))
+        .perform(typeText("Espresso"), ViewActions.closeSoftKeyboard());
+    // the soft keyboard should be dismissed to expose the button
+    onView(withId(R.id.changeTextBt)).perform(click());
+
+    // repeat, to make sure the retry mechanism still works for a subsequent ViewAction.
+    onView(withId(R.id.editTextUserInput))
+        .perform(typeText(", just works!"), ViewActions.closeSoftKeyboard());
+    onView(withId(R.id.changeTextBt)).perform(click());
   }
 
   public void testSetFailureHandler() {

@@ -29,9 +29,8 @@ import android.view.View;
 
 /**
  * A class to enable automated accessibility checks in Espresso tests. These checks will run
- * as a global {@code ViewAssertion} ({@see ViewActions#addGlobalAssertion(ViewAssertion)}), and
- * cover a variety of accessibility issues (see {@link AccessibilityCheckPreset#LATEST} to see which
- * checks are run).
+ * as a global {@code ViewAssertion}, and cover a variety of accessibility issues
+ * (see {@link AccessibilityCheckPreset#LATEST} to see which checks are run).
  */
 public final class AccessibilityChecks {
 

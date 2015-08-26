@@ -48,7 +48,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
-
 import android.support.test.espresso.matcher.ViewMatchers.Visibility;
 import android.support.test.testapp.test.R;
 import com.google.common.collect.Lists;

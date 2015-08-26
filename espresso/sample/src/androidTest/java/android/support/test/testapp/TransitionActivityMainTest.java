@@ -49,8 +49,8 @@ public class TransitionActivityMainTest
     getActivity();
   }
 
-    // This test only applies to Lollipop+
-  @SdkSuppress(minSdkVersion = 21)
+  // This test only applies to Lollipop+
+  @SdkSuppress(minSdkVersion=21)
   public void testTransition() throws InterruptedException {
     onView(withId(R.id.grid)).check(matches(isDisplayed()));
     onData(Matchers.anything()).atPosition(0).perform(click());
@@ -61,7 +61,7 @@ public class TransitionActivityMainTest
   }
 
   // This test only applies to Lollipop+
-  @SdkSuppress(minSdkVersion = 21)
+  @SdkSuppress(minSdkVersion=21)
   public void testInterruptedBackDoesntExit() {
     // Set a flag in the activity to intercept the back button.
     ((TransitionActivityMain) getActivity()).setExitOnBackPressed(false);

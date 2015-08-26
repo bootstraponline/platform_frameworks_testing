@@ -47,7 +47,7 @@ import android.support.annotation.Nullable;
  * An Entry Point to work with WebViews on Android.
  *
  * <p>Similar to onData, WebView interactions are actually composed of several ViewActions. However
- * they need to be properly orchastrated and are quite verbose. Web and WebInteraction wrap this
+ * they need to be properly orchestrated and are quite verbose. Web and WebInteraction wrap this
  * boilerplate and give an Espresso like feel to interacting with WebViews.
  *
  * <p>WebView interactions constantly cross the Java/Javascript boundary to do their work, since
@@ -202,7 +202,7 @@ public final class Web {
      * Calling this method resets any previously selected ElementReference.
      *
      * If you want to evaluate the elementPicker in the context of the previously selected
-     * ElementReference {@see withContextualElement}
+     * ElementReference {@see #withContextualElement}
      */
     public WebInteraction<R> withElement(Atom<ElementReference> elementPicker) {
       return new WebInteraction<R>(viewMatcher, result, window,
@@ -217,7 +217,7 @@ public final class Web {
      *
      * This allows callers to interact with a document that looks like this:
      * <pre>
-     * {@code
+     * {@literal
      * <div id="teacher">
      *   <div id="person_name">
      *     <p>Socrates</p>

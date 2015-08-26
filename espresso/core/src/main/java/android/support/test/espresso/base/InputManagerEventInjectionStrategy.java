@@ -22,6 +22,7 @@ import static com.google.common.base.Throwables.propagate;
 import android.support.test.espresso.InjectEventSecurityException;
 
 import android.os.Build;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.InputEvent;
@@ -38,6 +39,8 @@ import java.lang.reflect.Method;
  */
 final class InputManagerEventInjectionStrategy implements EventInjectionStrategy {
   private static final String TAG = InputManagerEventInjectionStrategy.class.getSimpleName();
+  // The delay time to allow the soft keyboard to dismiss.
+  private static final long KEYBOARD_DISMISSAL_DELAY_MILLIS = 1000L;
 
   // Used in reflection
   private boolean initComplete;
@@ -59,7 +62,7 @@ final class InputManagerEventInjectionStrategy implements EventInjectionStrategy
     try {
       Log.d(TAG, "Creating injection strategy with input manager.");
 
-      // Get the InputputManager class object and initialize if necessary.
+      // Get the InputManager class object and initialize if necessary.
       Class<?> inputManagerClassObject = Class.forName("android.hardware.input.InputManager");
       Method getInstanceMethod = inputManagerClassObject.getDeclaredMethod("getInstance");
       getInstanceMethod.setAccessible(true);
@@ -126,6 +129,11 @@ final class InputManagerEventInjectionStrategy implements EventInjectionStrategy
 
   @Override
   public boolean injectMotionEvent(MotionEvent motionEvent) throws InjectEventSecurityException {
+    return innerInjectMotionEvent(motionEvent, true);
+  }
+
+  private boolean innerInjectMotionEvent(MotionEvent motionEvent, boolean shouldRetry)
+      throws InjectEventSecurityException {
     try {
       // Need to set the event source to touch screen, otherwise the input can be ignored even
       // though injecting it would be successful.
@@ -144,9 +152,18 @@ final class InputManagerEventInjectionStrategy implements EventInjectionStrategy
     } catch (InvocationTargetException e) {
       Throwable cause = e.getCause();
       if (cause instanceof SecurityException) {
-        throw new InjectEventSecurityException(cause);
+        if (shouldRetry) {
+          Log.w(TAG, "Error performing a ViewAction! soft keyboard dismissal animation may have "
+              + "been in the way. Retrying once after: " + KEYBOARD_DISMISSAL_DELAY_MILLIS
+              + " millis");
+          SystemClock.sleep(KEYBOARD_DISMISSAL_DELAY_MILLIS);
+          innerInjectMotionEvent(motionEvent, false);
+        } else {
+          throw new InjectEventSecurityException(cause);
+        }
+      } else {
+        propagate(e);
       }
-      propagate(e);
     } catch (SecurityException e) {
       throw new InjectEventSecurityException(e);
     }
