@@ -99,6 +99,14 @@ public class TestRequestBuilder {
     private ClassLoader mClassLoader;
 
     /**
+     * Instructs the test builder if JUnit3 suite() methods should be executed.
+     * <p/>
+     * Currently set to false if any method filter is set, for consistency with
+     * InstrumentationTestRunner.
+      */
+    private boolean mIgnoreSuiteMethods = false;
+
+    /**
      * Accessor interface for retrieving device build properties.
      * <p/>
      * Used so unit tests can mock calls
@@ -479,7 +487,10 @@ public class TestRequestBuilder {
                 if (mExcludedMethods.contains(methodName)) {
                     return false;
                 }
-                return mIncludedMethods.isEmpty() || mIncludedMethods.contains(methodName);
+                // don't filter out descriptions with method name "initializationError", since
+                // Junit will generate such descriptions in error cases, See ErrorReportingRunner
+                return mIncludedMethods.isEmpty() || mIncludedMethods.contains(methodName)
+                    || methodName.equals("initializationError");
             }
             // At this point, this could only be a description of this filter
             return true;
@@ -572,6 +583,7 @@ public class TestRequestBuilder {
     public TestRequestBuilder addTestMethod(String testClassName, String testMethodName) {
         mIncludedClasses.add(testClassName);
         mClassMethodFilter.addMethod(testClassName, testMethodName);
+        mIgnoreSuiteMethods = true;
         return this;
     }
 
@@ -580,6 +592,7 @@ public class TestRequestBuilder {
      */
     public TestRequestBuilder removeTestMethod(String testClassName, String testMethodName) {
         mClassMethodFilter.removeMethod(testClassName, testMethodName);
+        mIgnoreSuiteMethods = true;
         return this;
     }
 
@@ -739,7 +752,8 @@ public class TestRequestBuilder {
         }
 
         Request request = classes(
-                new AndroidRunnerParams(mInstr, mArgsBundle, mSkipExecution, mPerTestTimeout),
+                new AndroidRunnerParams(mInstr, mArgsBundle, mSkipExecution, mPerTestTimeout,
+                        mIgnoreSuiteMethods),
                 new Computer(),
                 loader.getLoadedClasses().toArray(new Class[0]));
         return new TestRequest(loader.getLoadFailures(),

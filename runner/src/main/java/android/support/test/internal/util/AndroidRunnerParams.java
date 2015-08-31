@@ -27,6 +27,7 @@ public class AndroidRunnerParams {
     private final Bundle mBundle;
     private final boolean mSkipExecution;
     private final long mPerTestTimeout;
+    private final boolean mIgnoreSuiteMethods;
 
     /**
      * @param instrumentation the {@link Instrumentation} to inject into any tests that require it
@@ -37,11 +38,13 @@ public class AndroidRunnerParams {
      *                      timeout
      */
     public AndroidRunnerParams(Instrumentation instrumentation, Bundle bundle,
-                             boolean skipExecution, long perTestTimeout) {
+                               boolean skipExecution, long perTestTimeout,
+                               boolean ignoreSuiteMethods) {
         this.mInstrumentation = instrumentation;
         this.mBundle = bundle;
         this.mSkipExecution = skipExecution;
         this.mPerTestTimeout = perTestTimeout;
+        this.mIgnoreSuiteMethods = ignoreSuiteMethods;
     }
 
     public Instrumentation getInstrumentation() {
@@ -58,5 +61,9 @@ public class AndroidRunnerParams {
 
     public long getPerTestTimeout() {
         return mPerTestTimeout;
+    }
+
+    public boolean isIgnoreSuiteMethods() {
+        return mIgnoreSuiteMethods;
     }
 }

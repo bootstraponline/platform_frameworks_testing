@@ -299,6 +299,31 @@ public class TestRequestBuilderTest {
         }
     }
 
+    /**
+     * Test fixture for verifying support for suite() methods with tests.
+     */
+    public static class JUnit3SuiteWithTest extends TestCase {
+        public static junit.framework.Test suite() {
+            TestSuite suite = new TestSuite();
+            suite.addTestSuite(SampleJUnit3Test.class);
+            return suite;
+        }
+
+        public void testPass() {}
+    }
+
+    public static class JUnit4TestInitFailure {
+
+        // this is an invalid method - trying to run test will fail with init error
+        @Before
+        protected void setUp() {
+        }
+
+        @Test
+        public void testWillFailOnClassInit()  {
+        }
+    }
+
     @Mock
     private DeviceBuild mMockDeviceBuild;
     @Mock
@@ -1064,5 +1089,34 @@ public class TestRequestBuilderTest {
         JUnitCore testRunner = new JUnitCore();
         Result result = testRunner.run(request);
         Assert.assertEquals(3, result.getRunCount());
+    }
+
+
+    /**
+     * Verify suite() methods are ignored when method filter is used
+     */
+    @Test
+    public void testJUnit3Suite_filtered() {
+        Request request = mBuilder
+                .addTestMethod(JUnit3SuiteWithTest.class.getName(), "testPass")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
+    }
+
+    /**
+     * Verify method filter does not filter out initialization errors
+     */
+    @Test
+    public void testJUnit4FilterWithInitError() {
+        Request request = mBuilder
+                .addTestMethod(JUnit4TestInitFailure.class.getName(), "testWillFailOnClassInit")
+                .build()
+                .getRequest();
+        JUnitCore testRunner = new JUnitCore();
+        Result result = testRunner.run(request);
+        Assert.assertEquals(1, result.getRunCount());
     }
 }

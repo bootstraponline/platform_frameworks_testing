@@ -44,6 +44,9 @@ public class AndroidSuiteBuilder extends SuiteMethodBuilder {
 
     @Override
     public Runner runnerForClass(Class<?> testClass) throws Throwable {
+        if (mAndroidRunnerParams.isIgnoreSuiteMethods()) {
+            return null;
+        }
         try {
             if (hasSuiteMethod(testClass)) {
                 Test t = SuiteMethod.testFromSuiteMethod(testClass);
