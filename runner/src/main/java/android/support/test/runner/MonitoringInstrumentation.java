@@ -23,6 +23,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -126,6 +127,8 @@ public class MonitoringInstrumentation extends ExposedInstrumentationApi {
         Log.i(LOG_TAG, "Instrumentation Started!");
         logUncaughtExceptions();
 
+        installMultidex();
+
         InstrumentationRegistry.registerInstance(this, arguments);
         ActivityLifecycleMonitorRegistry.registerInstance(mLifecycleMonitor);
         ApplicationLifecycleMonitorRegistry.registerInstance(mApplicationMonitor);
@@ -141,6 +144,31 @@ public class MonitoringInstrumentation extends ExposedInstrumentationApi {
         super.onCreate(arguments);
         specifyDexMakerCacheProperty();
         setupDexmakerClassloader();
+    }
+
+    private final void installMultidex() {
+        // Typically multidex is installed by inserting call at Application#attachBaseContext
+        // However in  ICS and presumably below, instrumentation#onCreate is called before
+        // attachBaseContext. Thus need to install it here, if its on classpath, to prevent
+        // potential class loading issues when using multidex
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+            try {
+                Class<?> multidex = Class.forName(
+                        "android.support.multidex.MultiDex");
+                Method install = multidex.getDeclaredMethod("install", Context.class);
+                install.invoke(null, getTargetContext());
+            } catch (ClassNotFoundException ignored){
+                Log.i(LOG_TAG, "No multidex.");
+            } catch (NoSuchMethodException nsme){
+                Log.i(LOG_TAG, "No multidex.");
+            } catch (InvocationTargetException ite){
+                throw new RuntimeException(
+                        "multidex is available at runtime, but calling it failed.", ite);
+            } catch (IllegalAccessException iae){
+                throw new RuntimeException(
+                        "multidex is available at runtime, but calling it failed.", iae);
+            }
+        }
     }
 
     private final void specifyDexMakerCacheProperty() {
