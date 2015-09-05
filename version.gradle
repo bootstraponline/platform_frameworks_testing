@@ -1,7 +1,7 @@
 // Extra Version == Support Repo Revision
-ext.extraVersion = 18
+ext.extraVersion = 20
 ext.compileSdkVersion = 23
-ext.buildToolsVersion = '23.0.0'
-ext.supportLibVersion = '23.0.0'
+ext.buildToolsVersion = '23.0.1'
+ext.supportLibVersion = '23.0.1'
 ext.testingSupportLibVersion = '0.4'
 ext.espressoVersion = '2.2.1'
