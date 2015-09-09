@@ -199,7 +199,8 @@ public class ServiceTestRuleTest {
             thrown.expect(TimeoutException.class);
             thrown.expectMessage("Waited for 5 SECONDS, but service was never connected");
             // Since ServiceFixture is not a proper service no successful connection should occur
-            mServiceRule.startService(new Intent());
+            mServiceRule.startService(new Intent(InstrumentationRegistry.getTargetContext(),
+                    ServiceFixture.class));
         }
 
         @Test
@@ -234,7 +235,8 @@ public class ServiceTestRuleTest {
 
     @Test
     public void verifySuccessfulServiceStart() throws TimeoutException {
-        mServiceRule.startService(new Intent());
+        mServiceRule.startService(new Intent(InstrumentationRegistry.getTargetContext(),
+                ServiceFixture.class));
         assertTrue("The service was not started", mServiceRule.mServiceStarted);
         assertTrue("The service was not bound", mServiceRule.mServiceBound);
     }
