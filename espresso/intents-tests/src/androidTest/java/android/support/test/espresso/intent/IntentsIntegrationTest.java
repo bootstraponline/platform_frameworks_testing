@@ -254,9 +254,14 @@ public class IntentsIntegrationTest {
   @Test
   @SuppressWarnings("unchecked")
   public void externalIntentWithType() {
+      String toPackage = "com.android.mms";
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      // Starting with Android M the messaging package has changed.
+      toPackage = "com.google.android.apps.messaging";
+    }
     onView(withId(R.id.send_message_button)).perform(scrollTo(), click());
     intended(allOf(hasAction(Intent.ACTION_SEND),
-        toPackage("com.android.mms"),
+        toPackage(toPackage),
         hasType("text/plain")));
   }
 
