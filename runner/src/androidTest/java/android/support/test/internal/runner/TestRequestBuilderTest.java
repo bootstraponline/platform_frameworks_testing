@@ -17,6 +17,9 @@ package android.support.test.internal.runner;
 
 import static android.support.test.InstrumentationRegistry.getArguments;
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
 
 import android.support.test.filters.RequiresDevice;
 import android.support.test.filters.SdkSuppress;
@@ -26,6 +29,7 @@ import android.test.suitebuilder.annotation.SmallTest;
 import android.test.suitebuilder.annotation.Suppress;
 
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,12 +43,15 @@ import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 import org.junit.runner.notification.RunListener;
 import org.junit.runners.Parameterized;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Unit tests for {@link TestRequestBuilder}.
@@ -281,23 +288,46 @@ public class TestRequestBuilderTest {
         }
     }
 
+    /**
+     * Test fixture for verifying support for suite() methods
+     */
+    public static class JUnit3Suite {
+        public static junit.framework.Test suite() {
+            TestSuite suite = new TestSuite();
+            suite.addTestSuite(SampleJUnit3Test.class);
+            return suite;
+        }
+    }
 
     @Mock
     private DeviceBuild mMockDeviceBuild;
+    @Mock
+    private ClassPathScanner mMockClassPathScanner;
 
     private TestRequestBuilder mBuilder;
 
     @Before
     public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
         mBuilder = createBuilder();
     }
 
     private TestRequestBuilder createBuilder() {
-        return new TestRequestBuilder(getInstrumentation(), getArguments());
+        return new TestRequestBuilder(getInstrumentation(), getArguments()) {
+            @Override
+            ClassPathScanner createClassPathScanner(List<String> apks) {
+                return mMockClassPathScanner;
+            }
+        };
     }
 
     private TestRequestBuilder createBuilder(DeviceBuild deviceBuild) {
-        return new TestRequestBuilder(deviceBuild, getInstrumentation(), getArguments());
+        return new TestRequestBuilder(deviceBuild, getInstrumentation(), getArguments()) {
+            @Override
+            ClassPathScanner createClassPathScanner(List<String> apks) {
+                return mMockClassPathScanner;
+            }
+        };
     }
 
     /**
@@ -642,7 +672,7 @@ public class TestRequestBuilderTest {
         for (int i = 0; i < 4; i++) {
             // Theoretically everything could collide into one shard, but, we'll trust that
             // the implementation of hashCode() is random enough to avoid that.
-            Assert.assertTrue(results[i].getRunCount() < totalRun);
+            assertTrue(results[i].getRunCount() < totalRun);
         }
     }
 
@@ -753,18 +783,15 @@ public class TestRequestBuilderTest {
     }
 
     /**
-     * Verify filter include method but filter class leaves no tests.
+     * Verify adding and removing same class is rejected
      */
     @Test
     public void testFilterClassAddMethod() {
-        Request request = mBuilder
-                .addTestMethod(SampleTest.class.getName(), "testSmall")
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(TestRequestBuilder.MISSING_ARGUMENTS_MSG);
+        mBuilder.addTestMethod(SampleTest.class.getName(), "testSmall")
                 .removeTestClass(SampleTest.class.getName())
-                .build()
-                .getRequest();
-        JUnitCore testRunner = new JUnitCore();
-        Result result = testRunner.run(request);
-        Assert.assertEquals(0, result.getRunCount());
+                .build();
     }
 
     /**
@@ -832,14 +859,11 @@ public class TestRequestBuilderTest {
      */
     @Test
     public void testClassAndNotClass_same() {
-        Request request = mBuilder
-                .addTestClass(SampleTest.class.getName())
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(TestRequestBuilder.MISSING_ARGUMENTS_MSG);
+        mBuilder.addTestClass(SampleTest.class.getName())
                 .removeTestClass(SampleTest.class.getName())
-                .build()
-                .getRequest();
-        JUnitCore testRunner = new JUnitCore();
-        Result result = testRunner.run(request);
-        Assert.assertEquals(0, result.getRunCount());
+                .build();
     }
 
     /**
@@ -872,19 +896,22 @@ public class TestRequestBuilderTest {
     }
 
     /**
-     * Verify that including and excluding different packages leaves that package's methods.
+     * Verify including and excluding different packages .
      */
     @Test
-    public void testPackageAndNotPackage_different() {
-        mBuilder.addApkToScan(getInstrumentation().getTargetContext().getPackageCodePath());
-        Request request = mBuilder
-                .addTestPackage("android.support.test")
-                .removeTestPackage("android.support.test.internal.runner")
-                .build()
-                .getRequest();
-        JUnitCore testRunner = new JUnitCore();
-        Result result = testRunner.run(request);
-        Assert.assertEquals(73, result.getRunCount());
+    public void testPackageAndNotPackage_different() throws IOException {
+        // just assert that the correct package filters are passed to class path scanner
+        ArgumentCaptor<ClassPathScanner.ClassNameFilter> filterCapture =
+                ArgumentCaptor.forClass(ClassPathScanner.ClassNameFilter.class);
+
+        mBuilder.addApkToScan("foo")
+                .addTestPackage("com.foo")
+                .removeTestPackage("com.foo.internal")
+                .build();
+        verify(mMockClassPathScanner).getClassPathEntries(filterCapture.capture());
+        ClassPathScanner.ClassNameFilter filter = filterCapture.getValue();
+        assertTrue(filter.accept("com.foo.Foo"));
+        assertFalse(filter.accept("com.foo.internal.Foo"));
     }
 
     /**
@@ -894,6 +921,7 @@ public class TestRequestBuilderTest {
     public void testPackageAndNotPackage_same() {
         mBuilder.addApkToScan(getInstrumentation().getTargetContext().getPackageCodePath());
         Request request = mBuilder
+                .addApkToScan("foo")
                 .addTestPackage("android.support.test.internal.runner")
                 .removeTestPackage("android.support.test.internal.runner")
                 .build()
@@ -930,15 +958,15 @@ public class TestRequestBuilderTest {
     }
 
     /**
-     * Test exception is thrown when both test package and notClass has been provided
+     * Test providing a test package and notClass is allowed
      */
     @Test
     public void testBothPackageAndNotClass() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(EXCEPTION_MESSAGE);
-        mBuilder.addTestPackage("android.support.test.internal.runner")
+        mBuilder.addApkToScan("foo")
+                .addTestPackage("android.support.test.internal.runner")
                 .removeTestClass(SampleTest.class.getName())
                 .build();
+        // TODO: add more verification
     }
 
     /**
@@ -954,15 +982,15 @@ public class TestRequestBuilderTest {
     }
 
     /**
-     * Test exception is thrown when both test package and notMethod has been provided
+     * Test providing both test package and notMethod is allowed
      */
     @Test
     public void testBothPackageAndNotMethod() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(EXCEPTION_MESSAGE);
-        mBuilder.addTestPackage("android.support.test.internal.runner")
+        mBuilder.addApkToScan("foo")
+                .addTestPackage("android.support.test.internal.runner")
                 .removeTestMethod(SampleTest.class.getName(), "testSmall")
                 .build();
+        // TODO: add more verification
     }
 
     /**
@@ -983,7 +1011,7 @@ public class TestRequestBuilderTest {
     }
 
     /**
-     * Test exception is thrown when test package, test class and test notMethod has been provided
+     * Test that providing a test package with Class is not allowed
      */
     @Test
     public void testPackageAndClassAndNotMethod() {
@@ -995,13 +1023,10 @@ public class TestRequestBuilderTest {
                 .removeTestMethod(SampleTest.class.getName(), "testSmall")
                 .build()
                 .getRequest();
-        JUnitCore testRunner = new JUnitCore();
-        Result result = testRunner.run(request);
-        Assert.assertEquals(1, result.getRunCount());
     }
 
     /**
-     * Test exception is thrown when test package, test notClass and test method has been provided
+     * Test that providing a test package with test method is not allowed
      */
     @Test
     public void testPackageAndNotClassAndMethod() {
@@ -1013,26 +1038,31 @@ public class TestRequestBuilderTest {
                 .addTestMethod(SampleTest.class.getName(), "testSmall")
                 .build()
                 .getRequest();
-        JUnitCore testRunner = new JUnitCore();
-        Result result = testRunner.run(request);
-        Assert.assertEquals(1, result.getRunCount());
     }
 
     /**
-     * Test exception is thrown when test package, test notClass and test notMethod has been provided
+     * Test that providing a test package with notClass and test notMethod is allowed
      */
     @Test
     public void testPackageAndNotClassAndNotMethod() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(EXCEPTION_MESSAGE);
         Request request = mBuilder
+                .addApkToScan("foo")
                 .addTestPackage("android.support.test.internal.runner")
                 .removeTestClass(SampleClassSize.class.getName())
                 .removeTestMethod(SampleTest.class.getName(), "testSmall")
                 .build()
                 .getRequest();
+        // TODO: perform more verification here
+    }
+
+    @Test
+    public void testJUnit3Suite() {
+        Request request = mBuilder
+                .addTestClass(JUnit3Suite.class.getName())
+                .build()
+                .getRequest();
         JUnitCore testRunner = new JUnitCore();
         Result result = testRunner.run(request);
-        Assert.assertEquals(1, result.getRunCount());
+        Assert.assertEquals(3, result.getRunCount());
     }
 }

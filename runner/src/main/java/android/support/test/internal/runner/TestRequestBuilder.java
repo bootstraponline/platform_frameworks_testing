@@ -76,10 +76,16 @@ public class TestRequestBuilder {
             "android.support.test.internal.runner.junit3",// always skip AndroidTestSuite
     };
 
+    static final String MISSING_ARGUMENTS_MSG =
+            "Must provide either classes to run, or apks to scan";
+    static final String AMBIGUOUS_ARGUMENTS_MSG =
+            "Ambiguous arguments: cannot provide both test package and test class(es) to run";
+
     private List<String> mApkPaths = new ArrayList<String>();
-    private TestLoader mTestLoader;
     private Set<String> mIncludedPackages = new HashSet<>();
     private Set<String> mExcludedPackages = new HashSet<>();
+    private Set<String> mIncludedClasses = new HashSet<>();
+    private Set<String> mExcludedClasses = new HashSet<>();
     private ClassAndMethodFilter mClassMethodFilter = new ClassAndMethodFilter();
     private Filter mFilter = new AnnotationExclusionFilter(Suppress.class)
             .intersect(new SdkSuppressFilter())
@@ -90,6 +96,7 @@ public class TestRequestBuilder {
     private long mPerTestTimeout = 0;
     private final Instrumentation mInstr;
     private final Bundle mArgsBundle;
+    private ClassLoader mClassLoader;
 
     /**
      * Accessor interface for retrieving device build properties.
@@ -392,29 +399,19 @@ public class TestRequestBuilder {
      */
     private static class ClassAndMethodFilter extends Filter {
 
-        private Set<String> mIncludedClasses = new HashSet<>();
-        private Set<String> mExcludedClasses = new HashSet<>();
         private Map<String, MethodFilter> mMethodFilters = new HashMap<>();
 
         @Override
         public boolean shouldRun(Description description) {
-            if (mIncludedClasses.isEmpty() && mExcludedClasses.isEmpty()
-                    && mMethodFilters.isEmpty()) {
+            if (mMethodFilters.isEmpty()) {
                 return true;
             }
             if (description.isTest()) {
                 String className = description.getClassName();
-                // Test will be run iff it is not in the exclude set
-                if (mExcludedClasses.contains(className)) {
-                    return false;
-                }
                 MethodFilter methodFilter = mMethodFilters.get(className);
                 if (methodFilter != null) {
                     return methodFilter.shouldRun(description);
                 }
-                // This test was not explicitly excluded, run it iff the include list is empty or it
-                // contains the test's class.
-                return mIncludedClasses.isEmpty() || mIncludedClasses.contains(className);
             } else {
                 // Check all children, if any
                 for (Description child : description.getChildren()) {
@@ -447,14 +444,6 @@ public class TestRequestBuilder {
                 mMethodFilters.put(className, mf);
             }
             mf.remove(methodName);
-        }
-
-        public void addClass(String className) {
-            mIncludedClasses.add(className);
-        }
-
-        public void removeClass(String className) {
-            mExcludedClasses.add(className);
         }
     }
 
@@ -531,7 +520,6 @@ public class TestRequestBuilder {
     // Visible For Testing
     TestRequestBuilder(DeviceBuild deviceBuildAccessor,Instrumentation instr, Bundle bundle) {
         mDeviceBuild = Checks.checkNotNull(deviceBuildAccessor);
-        mTestLoader = new TestLoader();
         mInstr = Checks.checkNotNull(instr);
         mArgsBundle = Checks.checkNotNull(bundle);
     }
@@ -553,7 +541,7 @@ public class TestRequestBuilder {
      * @param loader {@link ClassLoader} to load test cases with.
      */
     public TestRequestBuilder setClassLoader(ClassLoader loader) {
-        mTestLoader.setClassLoader(loader);
+        mClassLoader = loader;
         return this;
     }
 
@@ -564,8 +552,7 @@ public class TestRequestBuilder {
      * @param className
      */
     public TestRequestBuilder addTestClass(String className) {
-        mTestLoader.loadClass(className);
-        mClassMethodFilter.addClass(className);
+        mIncludedClasses.add(className);
         return this;
     }
 
@@ -575,8 +562,7 @@ public class TestRequestBuilder {
      * @param className
      */
     public TestRequestBuilder removeTestClass(String className) {
-        mTestLoader.loadClass(className);
-        mClassMethodFilter.removeClass(className);
+        mExcludedClasses.add(className);
         return this;
     }
 
@@ -584,10 +570,8 @@ public class TestRequestBuilder {
      * Adds a test method to run.
      */
     public TestRequestBuilder addTestMethod(String testClassName, String testMethodName) {
-        Class<?> clazz = mTestLoader.loadClass(testClassName);
-        if (clazz != null) {
-            mClassMethodFilter.addMethod(testClassName, testMethodName);
-        }
+        mIncludedClasses.add(testClassName);
+        mClassMethodFilter.addMethod(testClassName, testMethodName);
         return this;
     }
 
@@ -595,10 +579,7 @@ public class TestRequestBuilder {
      * Excludes a test method from being run.
      */
     public TestRequestBuilder removeTestMethod(String testClassName, String testMethodName) {
-        Class<?> clazz = mTestLoader.loadClass(testClassName);
-        if (clazz != null) {
-            mClassMethodFilter.removeMethod(testClassName, testMethodName);
-        }
+        mClassMethodFilter.removeMethod(testClassName, testMethodName);
         return this;
     }
 
@@ -745,35 +726,39 @@ public class TestRequestBuilder {
      * @throws java.lang.IllegalArgumentException if provided set of data is not valid
      */
     public TestRequest build() {
-        validate();
-        if (mTestLoader.isEmpty()) {
+        mIncludedPackages.removeAll(mExcludedPackages);
+        mIncludedClasses.removeAll(mExcludedClasses);
+        validate(mIncludedClasses);
+        TestLoader loader = new TestLoader();
+        loader.setClassLoader(mClassLoader);
+        if (mIncludedClasses.isEmpty()) {
             // no class restrictions have been specified. Load all classes.
-            loadClassesFromClassPath();
+            loadClassesFromClassPath(loader, mExcludedClasses);
+        } else {
+            loadClasses(mIncludedClasses, loader);
         }
 
         Request request = classes(
                 new AndroidRunnerParams(mInstr, mArgsBundle, mSkipExecution, mPerTestTimeout),
                 new Computer(),
-                mTestLoader.getLoadedClasses().toArray(new Class[0]));
-        return new TestRequest(mTestLoader.getLoadFailures(),
+                loader.getLoadedClasses().toArray(new Class[0]));
+        return new TestRequest(loader.getLoadFailures(),
                 new LenientFilterRequest(request, mFilter));
     }
 
     /**
      * Validate that the set of options provided to this builder are valid and not conflicting
      */
-    private void validate() {
-        if (mTestLoader.isEmpty() && mApkPaths.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Must provide either classes to run, or apks to scan");
+    private void validate(Set<String> classNames) {
+        if (classNames.isEmpty() && mApkPaths.isEmpty()) {
+            throw new IllegalArgumentException(MISSING_ARGUMENTS_MSG);
         }
         // TODO: consider failing if both test classes and apk paths are given.
         // Right now that is allowed though
 
         if ((!mIncludedPackages.isEmpty() || !mExcludedPackages.isEmpty())
-                && !mTestLoader.isEmpty()) {
-            throw new IllegalArgumentException("Ambiguous arguments: " +
-                    "cannot provide both test package and test class(es) to run");
+                && !classNames.isEmpty()) {
+            throw new IllegalArgumentException(AMBIGUOUS_ARGUMENTS_MSG);
         }
     }
 
@@ -797,10 +782,18 @@ public class TestRequestBuilder {
         }
     }
 
-    private void loadClassesFromClassPath() {
+    private void loadClassesFromClassPath(TestLoader loader, Set<String> excludedClasses) {
         Collection<String> classNames = getClassNamesFromClassPath();
         for (String className : classNames) {
-            mTestLoader.loadIfTest(className);
+            if (!excludedClasses.contains(className)) {
+                loader.loadIfTest(className);
+            }
+        }
+    }
+
+    private void loadClasses(Collection<String> classNames, TestLoader loader) {
+        for (String className : classNames) {
+            loader.loadClass(className);
         }
     }
 
@@ -810,13 +803,13 @@ public class TestRequestBuilder {
         }
         Log.i(LOG_TAG, String.format("Scanning classpath to find tests in apks %s",
                 mApkPaths));
-        ClassPathScanner scanner = new ClassPathScanner(mApkPaths);
+        ClassPathScanner scanner = createClassPathScanner(mApkPaths);
 
         ChainedClassNameFilter filter =   new ChainedClassNameFilter();
         // exclude inner classes
         filter.add(new ExternalClassNameFilter());
         for (String pkg : DEFAULT_EXCLUDED_PACKAGES) {
-            // Add the test packages to the exclude list unless they were explicity included.
+            // Add the test packages to the exclude list unless they were explictly included.
             if (!mIncludedPackages.contains(pkg)) {
                 mExcludedPackages.add(pkg);
             }
@@ -840,7 +833,7 @@ public class TestRequestBuilder {
      * <p/>
      * Exposed so unit tests can mock.
      */
-    ClassPathScanner createClassPathScanner(String... apkPaths) {
+    ClassPathScanner createClassPathScanner(List<String> apkPaths) {
         return new ClassPathScanner(apkPaths);
     }
 
