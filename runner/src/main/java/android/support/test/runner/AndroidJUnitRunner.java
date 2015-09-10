@@ -76,6 +76,14 @@ import org.junit.runner.notification.RunListener;
  * -e class com.android.foo.FooTest,com.android.foo.TooTest
  * com.android.foo/android.support.test.runner.AndroidJUnitRunner
  * <p/>
+ * <b>Running all tests except those in a particular class:</b> adb shell am instrument -w
+ * -e notClass com.android.foo.FooTest
+ * com.android.foo/android.support.test.runner.AndroidJUnitRunner
+ * <p/>
+ * <b>Running all but a single test:</b> adb shell am instrument -w
+ * -e notClass com.android.foo.FooTest#testFoo
+ * com.android.foo/android.support.test.runner.AndroidJUnitRunner
+ * <p/>
  * <b>Running all tests listed in a file:</b> adb shell am instrument -w
  * -e testFile /sdcard/tmp/testFile.txt com.android.foo/com.android.test.runner.AndroidJUnitRunner
  * The file should contain a list of line separated test classes and optionally methods (expected
@@ -83,6 +91,10 @@ import org.junit.runner.notification.RunListener;
  * <p/>
  * <b>Running all tests in a java package:</b> adb shell am instrument -w
  * -e package com.android.foo.bar
+ * com.android.foo/android.support.test.runner.AndroidJUnitRunner
+ * <p/>
+ * <b>Running all tests except a particular package:</b> adb shell am instrument -w
+ * -e notPackage com.android.foo.bar
  * com.android.foo/android.support.test.runner.AndroidJUnitRunner
  * <b>To debug your tests, set a break point in your code and pass:</b>
  * -e debug true
