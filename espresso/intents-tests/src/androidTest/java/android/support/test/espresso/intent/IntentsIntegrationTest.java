@@ -157,7 +157,7 @@ public class IntentsIntegrationTest {
 
     // Testing Scheme "tel:xxx-xxx-xxxx"
     onView(withId(R.id.send_data_to_call_edit_text))
-        .perform(scrollTo(), typeText("123-345-6789"), closeSoftKeyboard());
+        .perform(closeSoftKeyboard(), scrollTo(), typeText("123-345-6789"), closeSoftKeyboard());
     onView(withId(R.id.send_to_call_button)).perform(scrollTo(), click());
     intended(allOf(
                 hasAction(Intent.ACTION_CALL),
@@ -254,15 +254,8 @@ public class IntentsIntegrationTest {
   @Test
   @SuppressWarnings("unchecked")
   public void externalIntentWithType() {
-      String toPackage = "com.android.mms";
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      // Starting with Android M the messaging package has changed.
-      toPackage = "com.google.android.apps.messaging";
-    }
     onView(withId(R.id.send_message_button)).perform(scrollTo(), click());
-    intended(allOf(hasAction(Intent.ACTION_SEND),
-        toPackage(toPackage),
-        hasType("text/plain")));
+    intended(allOf(hasAction(Intent.ACTION_SEND), hasType("text/plain")));
   }
 
   @Test
