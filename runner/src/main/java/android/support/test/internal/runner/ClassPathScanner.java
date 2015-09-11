@@ -16,6 +16,8 @@
 
 package android.support.test.internal.runner;
 
+import android.support.annotation.VisibleForTesting;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +35,8 @@ import dalvik.system.DexFile;
  * <p/>
  * Adapted from tools/tradefederation/..ClassPathScanner
  */
-class ClassPathScanner {
+@VisibleForTesting
+public class ClassPathScanner {
 
     /**
      * A filter for classpath entry paths
