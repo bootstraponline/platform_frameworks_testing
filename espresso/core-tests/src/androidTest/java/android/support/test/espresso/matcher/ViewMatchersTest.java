@@ -17,6 +17,7 @@
 package android.support.test.espresso.matcher;
 
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
+import static android.support.test.espresso.matcher.ViewMatchers.hasBackground;
 import static android.support.test.espresso.matcher.ViewMatchers.hasContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static android.support.test.espresso.matcher.ViewMatchers.hasErrorText;
@@ -637,6 +638,13 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     } catch (NullPointerException e) {
       // Good, this is expected.
     }
+  }
+
+  public void testHasBackground() {
+    View viewWithBackground = new View(context);
+    viewWithBackground.setBackground(context.getDrawable(R.drawable.drawable_1));
+
+    assertTrue(hasBackground(R.drawable.drawable_1).matches(viewWithBackground));
   }
 
   public void testWithInputType_ReturnsTrueIf_CorrectInput() {

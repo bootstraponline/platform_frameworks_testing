@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.hamcrest.Matchers.is;
 
+import android.support.test.annotation.Beta;
 import android.support.test.espresso.util.HumanReadables;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -1160,4 +1161,14 @@ public final class ViewMatchers {
     };
   }
 
+  /**
+   * Returns a matcher that matches {@link android.view.View} based on background resource.
+   * <p/>
+   * Note: This method compares images at a pixel level and might have significant performance
+   * implications for larger bitmaps.
+   */
+  @Beta
+  public static Matcher<View> hasBackground(final int drawableId) {
+    return new HasBackgroundMatcher(drawableId);
+  }
 }
