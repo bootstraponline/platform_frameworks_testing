@@ -16,13 +16,16 @@
 
 package android.support.test.testapp;
 
+import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.setFailureHandler;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
+import android.support.test.espresso.Espresso;
 import android.support.test.espresso.FailureHandler;
 
+import android.support.test.espresso.base.DefaultFailureHandler;
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.util.Log;
@@ -49,6 +52,12 @@ public class CustomFailureHandlerTest extends ActivityInstrumentationTestCase2<M
     super.setUp();
     getActivity();
     setFailureHandler(new CustomFailureHandler());
+  }
+
+  @Override
+  public void tearDown() throws Exception {
+    super.tearDown();
+    Espresso.setFailureHandler(new DefaultFailureHandler(getTargetContext()));
   }
 
   public void testWithCustomFailureHandler() {
