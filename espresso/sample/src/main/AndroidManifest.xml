@@ -63,6 +63,7 @@
         <activity android:name="TransitionActivityMain" android:label="transition activity" />
         <activity android:name="TransitionDetailActivity" />
         <activity android:name="KeyboardTestActivity" android:label="Keyboard Test Activity"/>
+        <activity android:name="InterceptingActivity" android:label="Test Activity for InterceptingActivityFactory"/>
     </application>
 
     <uses-permission android:name="android.permission.CALL_PHONE"></uses-permission>

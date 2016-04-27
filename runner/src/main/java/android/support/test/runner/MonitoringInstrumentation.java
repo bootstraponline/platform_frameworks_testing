@@ -32,10 +32,13 @@ import android.os.MessageQueue.IdleHandler;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.internal.runner.hidden.ExposedInstrumentationApi;
 import android.support.test.internal.runner.intent.IntentMonitorImpl;
-import android.support.test.runner.intent.IntentStubberRegistry;
 import android.support.test.internal.runner.lifecycle.ActivityLifecycleMonitorImpl;
 import android.support.test.internal.runner.lifecycle.ApplicationLifecycleMonitorImpl;
+import android.support.test.internal.util.Checks;
+import android.support.test.internal.runner.intercepting.DefaultInterceptingActivityFactory;
+import android.support.test.runner.intercepting.InterceptingActivityFactory;
 import android.support.test.runner.intent.IntentMonitorRegistry;
+import android.support.test.runner.intent.IntentStubberRegistry;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.test.runner.lifecycle.ApplicationLifecycleMonitorRegistry;
 import android.support.test.runner.lifecycle.ApplicationStage;
@@ -114,6 +117,7 @@ public class MonitoringInstrumentation extends ExposedInstrumentationApi {
     };
 
     private volatile boolean mFinished = false;
+    private volatile InterceptingActivityFactory mInterceptingActivityFactory;
 
     /**
      * Sets up lifecycle monitoring, and argument registry.
@@ -144,6 +148,7 @@ public class MonitoringInstrumentation extends ExposedInstrumentationApi {
         super.onCreate(arguments);
         specifyDexMakerCacheProperty();
         setupDexmakerClassloader();
+        useDefaultInterceptingActivityFactory();
     }
 
     private final void installMultidex() {
@@ -601,6 +606,39 @@ public class MonitoringInstrumentation extends ExposedInstrumentationApi {
                 parent,
                 id,
                 lastNonConfigurationInstance);
+    }
+
+    @Override
+    public Activity newActivity(ClassLoader cl, String className, Intent intent)
+        throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+        return mInterceptingActivityFactory.shouldIntercept(cl, className, intent)
+                ? mInterceptingActivityFactory.create(cl, className, intent)
+                : super.newActivity(cl, className, intent);
+    }
+
+    /**
+     * Use the given InterceptingActivityFactory to create Activity instance in
+     * {@link #newActivity(ClassLoader, String, Intent)}. This can be used to override default
+     * behavior of activity in tests e.g. mocking startService() method in Activity under test,
+     * to avoid starting the real service and instead verifying that a particular service was
+     * started.
+     *
+     * @param interceptingActivityFactory InterceptingActivityFactory to be used for creating
+     *                                    activity instance in {@link #newActivity(ClassLoader,
+     *                                    String, Intent)}
+     */
+    public void interceptActivityUsing(InterceptingActivityFactory interceptingActivityFactory) {
+        Checks.checkNotNull(interceptingActivityFactory);
+        mInterceptingActivityFactory = interceptingActivityFactory;
+    }
+
+    /**
+     * Use default mechanism of creating activity instance in
+     * {@link #newActivity(ClassLoader, String, Intent)}
+     */
+
+    public void useDefaultInterceptingActivityFactory() {
+        mInterceptingActivityFactory = new DefaultInterceptingActivityFactory();
     }
 
     /**
