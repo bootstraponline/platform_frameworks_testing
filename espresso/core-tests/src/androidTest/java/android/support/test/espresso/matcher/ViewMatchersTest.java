@@ -16,46 +16,6 @@
 
 package android.support.test.espresso.matcher;
 
-import android.content.Context;
-import android.graphics.Color;
-import android.support.test.annotation.UiThreadTest;
-import android.support.test.espresso.matcher.ViewMatchers.Visibility;
-import android.support.test.rule.UiThreadTestRule;
-import android.support.test.runner.AndroidJUnit4;
-import android.support.test.testapp.test.R;
-import android.test.suitebuilder.annotation.MediumTest;
-import android.text.InputType;
-import android.text.Spannable;
-import android.text.style.ForegroundColorSpan;
-import android.text.util.Linkify;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.Checkable;
-import android.widget.CheckedTextView;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RelativeLayout;
-import android.widget.ScrollView;
-import android.widget.Spinner;
-import android.widget.TextView;
-
-import com.google.common.collect.Lists;
-
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-
-import java.util.List;
-
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.hasBackground;
@@ -65,6 +25,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static android.support.test.espresso.matcher.ViewMatchers.hasImeAction;
 import static android.support.test.espresso.matcher.ViewMatchers.hasLinks;
 import static android.support.test.espresso.matcher.ViewMatchers.hasSibling;
+import static android.support.test.espresso.matcher.ViewMatchers.hasTextColor;
 import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isClickable;
@@ -93,6 +54,44 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.rules.ExpectedException.none;
+
+import android.content.Context;
+import android.graphics.Color;
+import android.os.Build;
+import android.support.test.annotation.UiThreadTest;
+import android.support.test.espresso.matcher.ViewMatchers.Visibility;
+import android.support.test.rule.UiThreadTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.test.R;
+import android.test.suitebuilder.annotation.MediumTest;
+import android.text.InputType;
+import android.text.Spannable;
+import android.text.style.ForegroundColorSpan;
+import android.text.util.Linkify;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.Checkable;
+import android.widget.CheckedTextView;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import com.google.common.collect.Lists;
+import java.util.List;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 /**
  * Unit tests for {@link ViewMatchers}.
@@ -353,6 +352,24 @@ public class ViewMatchersTest {
     assertTrue(withText(is(testText)).matches(textView));
     assertFalse(withText(is("blah")).matches(textView));
     assertFalse(withText(is("")).matches(textView));
+  }
+
+  @Test
+  public void hasTextColorTest() {
+    TextView textView = new TextView(context);
+    textView.setText("text");
+
+    int color;
+    if (Build.VERSION.SDK_INT <= 22) {
+      color = context.getResources().getColor(R.color.green);
+    } else {
+      color = context.getColor(R.color.green);
+    }
+
+    textView.setTextColor(color);
+
+    assertTrue(hasTextColor(R.color.green).matches(textView));
+    assertFalse(hasTextColor(R.color.red).matches(textView));
   }
 
   @Test
