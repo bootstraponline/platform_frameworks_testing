@@ -20,18 +20,25 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
+import android.support.test.runner.intercepting.SingleActivityFactory;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.test.runner.MonitoringInstrumentation;
 import android.test.suitebuilder.annotation.SmallTest;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
+import org.junit.runners.model.Statement;
+import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -284,5 +291,29 @@ public class ActivityTestRuleTest {
     public void customIntentPerTest() {
         Result result = runClasses(CustomIntentPerTest.class);
         assertEquals(0, result.getFailureCount());
+    }
+
+    @Test
+    public void shouldAskInstrumentationToInterceptActivityUsingGivenFactoryAndResetItAfterTest()
+            throws Throwable {
+        SingleActivityFactory<ActivityFixture> singleActivityFactory =
+                new SingleActivityFactory<ActivityFixture>(ActivityFixture.class) {
+                    @Override
+                    public ActivityFixture create(Intent intent) {
+                        return mMockActivity;
+                    }
+                };
+        ActivityTestRule<ActivityFixture> activityTestRule = new ActivityTestRule<>(
+                singleActivityFactory, true, false);
+        MonitoringInstrumentation instrumentation = mock(MonitoringInstrumentation.class);
+        when(instrumentation.getTargetContext()).thenReturn(getTargetContext());
+        activityTestRule.setInstrumentation(instrumentation);
+        Statement baseStatement = mock(Statement.class);
+        activityTestRule.apply(baseStatement, mock(Description.class)).evaluate();
+
+        InOrder inOrder = Mockito.inOrder(instrumentation, baseStatement);
+        inOrder.verify(instrumentation).interceptActivityUsing(singleActivityFactory);
+        inOrder.verify(baseStatement).evaluate();
+        inOrder.verify(instrumentation).useDefaultInterceptingActivityFactory();
     }
 }

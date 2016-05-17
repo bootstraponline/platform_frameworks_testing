@@ -16,16 +16,18 @@
 
 package android.support.test.rule;
 
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.annotation.Beta;
+import android.support.test.runner.intercepting.SingleActivityFactory;
+import android.support.test.runner.MonitoringInstrumentation;
 import android.util.Log;
+
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 import static android.support.test.internal.util.Checks.checkNotNull;
 
@@ -55,6 +57,8 @@ public class ActivityTestRule<T extends Activity> extends UiThreadTestRule {
     private boolean mLaunchActivity = false;
 
     private T mActivity;
+
+    private SingleActivityFactory<T> mActivityFactory;
 
     /**
      * Similar to {@link #ActivityTestRule(Class, boolean, boolean)} but with "touch mode" disabled.
@@ -106,6 +110,25 @@ public class ActivityTestRule<T extends Activity> extends UiThreadTestRule {
         mInitialTouchMode = initialTouchMode;
         mLaunchActivity = launchActivity;
         mInstrumentation = InstrumentationRegistry.getInstrumentation();
+    }
+
+    /**
+     * Creates an {@link ActivityTestRule} for the Activity under test.
+     *
+     * @param activityFactory  factory to be used for creating Activity instance
+     * @param initialTouchMode true if the Activity should be placed into "touch mode" when started
+     * @param launchActivity   true if the Activity should be launched once per
+     *                         <a href="http://junit.org/javadoc/latest/org/junit/Test.html">
+     *                         <code>Test</code></a> method. It will be launched before the first
+     *                         <a href="http://junit.sourceforge.net/javadoc/org/junit/Before.html">
+     *                         <code>Before</code></a> method, and terminated after the last
+     *                         <a href="http://junit.sourceforge.net/javadoc/org/junit/After.html">
+     *                         <code>After</code></a> method.
+     */
+    public ActivityTestRule(SingleActivityFactory<T> activityFactory,
+                            boolean initialTouchMode, boolean launchActivity) {
+        this(activityFactory.getActivityClassToIntercept(), initialTouchMode, launchActivity);
+        mActivityFactory = activityFactory;
     }
 
     /**
@@ -250,12 +273,22 @@ public class ActivityTestRule<T extends Activity> extends UiThreadTestRule {
 
         @Override
         public void evaluate() throws Throwable {
+            MonitoringInstrumentation instrumentation
+                    = ActivityTestRule.this.mInstrumentation instanceof MonitoringInstrumentation
+                    ? (MonitoringInstrumentation) ActivityTestRule.this.mInstrumentation
+                    : null;
             try {
+                if (mActivityFactory != null && instrumentation != null) {
+                    instrumentation.interceptActivityUsing(mActivityFactory);
+                }
                 if (mLaunchActivity) {
                     mActivity = launchActivity(getActivityIntent());
                 }
                 mBase.evaluate();
             } finally {
+                if (instrumentation != null) {
+                    instrumentation.useDefaultInterceptingActivityFactory();
+                }
                 finishActivity();
                 afterActivityFinished();
             }
