@@ -34,8 +34,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests for {@link HasBackgroundMatcher}.
  */
-@RunWith(AndroidJUnit4.class)
 @MediumTest
+@RunWith(AndroidJUnit4.class)
 public class HasBackgroundMatcherTest {
 
   private Context context;

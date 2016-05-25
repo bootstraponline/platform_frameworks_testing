@@ -16,7 +16,12 @@
 
 package android.support.test.espresso.base;
 
-import junit.framework.TestCase;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import org.junit.After;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -26,23 +31,28 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 /**
  * Unit test for {@link AsyncTaskPoolMonitor}
  */
-public class AsyncTaskPoolMonitorTest extends TestCase {
+@LargeTest
+@RunWith(AndroidJUnit4.class)
+public class AsyncTaskPoolMonitorTest {
 
   private final ThreadPoolExecutor testThreadPool = new ThreadPoolExecutor(
       4, 4, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 
   private AsyncTaskPoolMonitor monitor = new AsyncTaskPoolMonitor(testThreadPool);
 
-  @Override
+  @After
   public void tearDown() throws Exception {
     testThreadPool.shutdownNow();
-    super.tearDown();
   }
 
-  public void testIsIdle_onEmptyPool() throws Exception {
+  @Test
+  public void isIdle_onEmptyPool() throws Exception {
     assertTrue(monitor.isIdleNow());
     final AtomicBoolean isIdle = new AtomicBoolean(false);
     // since we're already idle, this should be ran immedately on our thread.
@@ -55,7 +65,8 @@ public class AsyncTaskPoolMonitorTest extends TestCase {
     assertTrue(isIdle.get());
   }
 
-  public void testIsIdle_withRunningTask() throws Exception {
+  @Test
+  public void isIdle_withRunningTask() throws Exception {
     final CountDownLatch runLatch = new CountDownLatch(1);
     testThreadPool.submit(new Runnable() {
       @Override
@@ -82,8 +93,8 @@ public class AsyncTaskPoolMonitorTest extends TestCase {
     assertFalse(isIdle.get());
   }
 
-
-  public void testIdleNotificationAndRestart() throws Exception {
+  @Test
+  public void idleNotificationAndRestart() throws Exception {
 
     FutureTask<Thread> workerThreadFetchTask = new FutureTask<Thread>(new Callable<Thread>() {
       @Override
@@ -129,7 +140,8 @@ public class AsyncTaskPoolMonitorTest extends TestCase {
     assertTrue(monitor.isIdleNow());
   }
 
-  public void testIdleNotification_extraWork() throws Exception {
+  @Test
+  public void idleNotification_extraWork() throws Exception {
     final CountDownLatch firstRunLatch = new CountDownLatch(1);
     final CountDownLatch firstExitLatch = new CountDownLatch(1);
 

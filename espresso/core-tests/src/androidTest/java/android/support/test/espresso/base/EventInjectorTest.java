@@ -16,17 +16,17 @@
 
 package android.support.test.espresso.base;
 
-import android.support.test.runner.lifecycle.ActivityLifecycleCallback;
-import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
-import android.support.test.runner.lifecycle.Stage;
-import android.support.test.espresso.InjectEventSecurityException;
-import android.support.test.testapp.R;
-import android.support.test.testapp.SendActivity;
-
 import android.app.Activity;
 import android.os.Build;
 import android.os.SystemClock;
-import android.test.ActivityInstrumentationTestCase2;
+import android.support.test.espresso.InjectEventSecurityException;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.runner.lifecycle.ActivityLifecycleCallback;
+import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
+import android.support.test.runner.lifecycle.Stage;
+import android.support.test.testapp.R;
+import android.support.test.testapp.SendActivity;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.util.Log;
 import android.view.KeyCharacterMap;
@@ -34,14 +34,34 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.rules.ExpectedException.none;
+
 /**
  * Tests for {@link EventInjector}.
  */
-public class EventInjectorTest extends ActivityInstrumentationTestCase2<SendActivity> {
+@LargeTest
+@RunWith(AndroidJUnit4.class)
+public class EventInjectorTest {
+  @Rule
+  public ActivityTestRule<SendActivity> rule =
+      new ActivityTestRule<>(SendActivity.class, true, false);
+
+  @Rule
+  public ExpectedException expectedException = none();
+
   private static final String TAG = EventInjectorTest.class.getSimpleName();
   private Activity sendActivity;
   private EventInjector injector;
@@ -49,15 +69,8 @@ public class EventInjectorTest extends ActivityInstrumentationTestCase2<SendActi
   final AtomicBoolean injectEventThrewSecurityException = new AtomicBoolean(false);
   final CountDownLatch latch = new CountDownLatch(1);
 
-  @SuppressWarnings("deprecation")
-  public EventInjectorTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", SendActivity.class);
-  }
-
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     if (Build.VERSION.SDK_INT > 15) {
       InputManagerEventInjectionStrategy strat = new InputManagerEventInjectionStrategy();
       strat.initialize();
@@ -69,14 +82,9 @@ public class EventInjectorTest extends ActivityInstrumentationTestCase2<SendActi
     }
   }
 
-  @Override
-  public void tearDown() throws Exception {
-    super.tearDown();
-  }
-
-  @LargeTest
-  public void testInjectKeyEventUpWithNoDown() throws Exception {
-    sendActivity = getActivity();
+  @Test
+  public void injectKeyEventUpWithNoDown() throws Exception {
+    sendActivity = rule.launchActivity(null);
 
     getInstrumentation().runOnMainSync(new Runnable() {
       @Override
@@ -93,9 +101,9 @@ public class EventInjectorTest extends ActivityInstrumentationTestCase2<SendActi
     assertTrue(injector.injectKeyEvent(events[1]));
   }
 
-  @LargeTest
-  public void testInjectStaleKeyEvent() throws Exception {
-    sendActivity = getActivity();
+  @Test
+  public void injectStaleKeyEvent() throws Exception {
+    sendActivity = rule.launchActivity(null);
 
     getInstrumentation().runOnMainSync(new Runnable() {
       @Override
@@ -121,18 +129,16 @@ public class EventInjectorTest extends ActivityInstrumentationTestCase2<SendActi
     }
   }
 
-  @LargeTest
-  public void testInjectKeyEvent_securityException() {
+  @Test
+  public void injectKeyEvent_securityException() throws InjectEventSecurityException {
     KeyCharacterMap keyCharacterMap = UiControllerImpl.getKeyCharacterMap();
     KeyEvent[] events = keyCharacterMap.getEvents("a".toCharArray());
-    try {
-      injector.injectKeyEvent(events[0]);
-      fail("Should have thrown a security exception!");
-    } catch (InjectEventSecurityException expected) { }
+    expectedException.expect(InjectEventSecurityException.class);
+    injector.injectKeyEvent(events[0]);
   }
 
-  @LargeTest
-  public void testInjectMotionEvent_securityException() throws Exception {
+  @Test
+  public void injectMotionEvent_securityException() throws Exception {
     getInstrumentation().runOnMainSync(new Runnable() {
       @Override
       public void run() {
@@ -155,8 +161,8 @@ public class EventInjectorTest extends ActivityInstrumentationTestCase2<SendActi
     assertTrue(injectEventThrewSecurityException.get());
   }
 
-  @LargeTest
-  public void testInjectMotionEvent_upEventFailure() throws InterruptedException {
+  @Test
+  public void injectMotionEvent_upEventFailure() throws InterruptedException {
     final CountDownLatch activityStarted = new CountDownLatch(1);
     ActivityLifecycleCallback callback = new ActivityLifecycleCallback() {
       @Override
@@ -170,10 +176,10 @@ public class EventInjectorTest extends ActivityInstrumentationTestCase2<SendActi
         .getInstance()
         .addLifecycleCallback(callback);
     try {
-      getActivity();
+      rule.launchActivity(null);
       assertTrue(activityStarted.await(20, TimeUnit.SECONDS));
       final int[] xy = UiControllerImplIntegrationTest.getCoordinatesInMiddleOfSendButton(
-          getActivity(), getInstrumentation());
+          rule.getActivity(), getInstrumentation());
 
       getInstrumentation().runOnMainSync(new Runnable() {
         @Override

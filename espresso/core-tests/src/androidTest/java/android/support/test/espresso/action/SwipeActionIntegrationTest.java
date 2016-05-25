@@ -16,6 +16,17 @@
 
 package android.support.test.espresso.action;
 
+import android.support.test.espresso.ViewAction;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.R;
+import android.support.test.testapp.SwipeActivity;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.swipeDown;
 import static android.support.test.espresso.action.ViewActions.swipeLeft;
@@ -28,33 +39,18 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 
-import android.support.test.espresso.ViewAction;
-import android.support.test.testapp.R;
-import android.support.test.testapp.SwipeActivity;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
-
 /**
  * Integration tests for swiping actions.
  */
 @LargeTest
-public class SwipeActionIntegrationTest extends ActivityInstrumentationTestCase2<SwipeActivity> {
-
-  @SuppressWarnings("deprecation")
-  public SwipeActionIntegrationTest() {
-    // Keep froyo happy.
-    super("android.support.test.testapp", SwipeActivity.class);
-  }
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
-  }
+@RunWith(AndroidJUnit4.class)
+public class SwipeActionIntegrationTest {
+  @Rule
+  public ActivityTestRule<SwipeActivity> rule = new ActivityTestRule<>(SwipeActivity.class);
 
   /** Tests that a small view can be swiped in both directions. */
-  public void testSwipeOverSmallView() {
+  @Test
+  public void swipeOverSmallView() {
     onView(withId(R.id.small_pager))
       .check(matches(hasDescendant(withText("Position #0"))))
       .perform(swipeLeft())
@@ -68,7 +64,8 @@ public class SwipeActionIntegrationTest extends ActivityInstrumentationTestCase2
   }
 
   /** Tests that a view can be swiped outwards from its edge. */
-  public void testSwipeOutwardFromEdge() {
+  @Test
+  public void swipeOutwardFromEdge() {
     onView(withId(R.id.small_pager))
       .check(matches(hasDescendant(withText("Position #0"))))
       .perform(swipeLeftFromLeftEdge())
@@ -87,7 +84,8 @@ public class SwipeActionIntegrationTest extends ActivityInstrumentationTestCase2
   }
 
   /** Tests that trying to swipe beyond the start of a view pager has no effect. */
-  public void testSwipingRightHasNoEffectWhenAtStart() {
+  @Test
+  public void swipingRightHasNoEffectWhenAtStart() {
     onView(withId(R.id.small_pager))
       .check(matches(hasDescendant(withText("Position #0"))))
       .perform(swipeRight())
@@ -97,7 +95,8 @@ public class SwipeActionIntegrationTest extends ActivityInstrumentationTestCase2
   }
 
   /** Tests that trying to swipe beyond the end of a view pager has no effect. */
-  public void testSwipingLeftHasNoEffectWhenAtEnd() {
+  @Test
+  public void swipingLeftHasNoEffectWhenAtEnd() {
     onView(withId(R.id.small_pager))
       .perform(swipeLeft())
       .perform(swipeLeft())
@@ -109,7 +108,8 @@ public class SwipeActionIntegrationTest extends ActivityInstrumentationTestCase2
   }
 
   /** Tests that swiping across a partially overlapped view works correctly. */
-  public void testSwipeOverPartiallyOverlappedView() {
+  @Test
+  public void swipeOverPartiallyOverlappedView() {
     onView(withId(R.id.overlapped_pager))
       .check(matches(hasDescendant(withText("Position #0"))))
       .perform(swipeLeft())
@@ -119,8 +119,8 @@ public class SwipeActionIntegrationTest extends ActivityInstrumentationTestCase2
   }
 
   /** Tests that trying to swipe a view that doesn't respond to swipes has no effect. */
-  @SuppressWarnings("unchecked")
-  public void testSwipeOverUnswipableView() {
+  @Test
+  public void swipeOverUnswipableView() {
     onView(withId(R.id.text_simple))
       .check(matches(allOf(isDisplayed(), withText(R.string.text_simple))))
       .perform(swipeLeft())
@@ -130,7 +130,8 @@ public class SwipeActionIntegrationTest extends ActivityInstrumentationTestCase2
   }
 
   /** Tests that a vertical paper can be swiped up and down */
-  public void testSwipeOverVerticalPager() {
+  @Test
+  public void swipeOverVerticalPager() {
     onView(withId(R.id.vertical_pager))
       .check(matches(hasDescendant(withText("Position #0"))))
       .perform(swipeUp())
@@ -144,7 +145,8 @@ public class SwipeActionIntegrationTest extends ActivityInstrumentationTestCase2
   }
 
   /** Tests that trying to swipe beyond the start of a vertical view pager has no effect. */
-  public void testSwipingDownHasNoEffectWhenAtStart() {
+  @Test
+  public void swipingDownHasNoEffectWhenAtStart() {
     onView(withId(R.id.vertical_pager))
       .check(matches(hasDescendant(withText("Position #0"))))
       .perform(swipeDown())
@@ -154,7 +156,8 @@ public class SwipeActionIntegrationTest extends ActivityInstrumentationTestCase2
   }
 
   /** Tests that trying to swipe beyond the end of a vertical view pager has no effect. */
-  public void testSwipingUpHasNoEffectWhenAtEnd() {
+  @Test
+  public void swipingUpHasNoEffectWhenAtEnd() {
     onView(withId(R.id.vertical_pager))
       .perform(swipeUp())
       .perform(swipeUp())

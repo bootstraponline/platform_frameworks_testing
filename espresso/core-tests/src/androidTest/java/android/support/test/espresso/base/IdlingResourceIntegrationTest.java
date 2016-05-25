@@ -16,6 +16,22 @@
 
 package android.support.test.espresso.base;
 
+import android.support.test.espresso.IdlingResource;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.SendActivity;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.pressBack;
 import static android.support.test.espresso.Espresso.registerIdlingResources;
@@ -26,41 +42,28 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.hamcrest.Matchers.is;
 
-import android.support.test.espresso.IdlingResource;
-import android.support.test.testapp.SendActivity;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
  * Integration test with IdlingResources.
  */
 @LargeTest
-public class IdlingResourceIntegrationTest extends ActivityInstrumentationTestCase2<SendActivity> {
+@RunWith(AndroidJUnit4.class)
+public class IdlingResourceIntegrationTest {
+
+  @Rule
+  public ActivityTestRule<SendActivity> rule = new ActivityTestRule<>(SendActivity.class);
 
   private ResettingIdlingResource r1;
   private ResettingIdlingResource r2;
 
-  @SuppressWarnings("deprecation")
-  public IdlingResourceIntegrationTest() {
-    super("android.support.test.testapp", SendActivity.class);
-  }
-
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     r1 = new ResettingIdlingResource("SlowResource", 6000);
     r2 = new ResettingIdlingResource("FastResource", 500);
     registerIdlingResources(r1, r2);
-    getActivity();
   }
 
-  public void testClickWithCustomIdlingResources() {
+  @Test
+  public void clickWithCustomIdlingResources() {
     onView(withText(equalToIgnoringCase("send"))).perform(click());
     r1.reset();
     r2.reset();

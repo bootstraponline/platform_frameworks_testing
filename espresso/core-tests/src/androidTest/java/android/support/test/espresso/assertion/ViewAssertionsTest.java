@@ -16,18 +16,10 @@
 
 package android.support.test.espresso.assertion;
 
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.assertion.ViewAssertions.selectedDescendantsMatch;
-import static android.support.test.espresso.matcher.ViewMatchers.hasContentDescription;
-import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
-
+import android.content.Context;
 import android.support.test.espresso.NoMatchingViewException;
-
-import android.test.InstrumentationTestCase;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.MediumTest;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -37,11 +29,32 @@ import android.widget.TextView;
 import junit.framework.AssertionFailedError;
 
 import org.hamcrest.Matcher;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.assertion.ViewAssertions.selectedDescendantsMatch;
+import static android.support.test.espresso.matcher.ViewMatchers.hasContentDescription;
+import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.rules.ExpectedException.none;
 
 /**
  * Unit tests for {@link ViewAssertions}.
  */
-public class ViewAssertionsTest extends InstrumentationTestCase {
+@MediumTest
+@RunWith(AndroidJUnit4.class)
+public class ViewAssertionsTest {
+
+  @Rule
+  public ExpectedException expectedException = none();
 
   private View presentView;
   private View absentView;
@@ -50,11 +63,12 @@ public class ViewAssertionsTest extends InstrumentationTestCase {
   private Matcher<View> alwaysAccepts;
   private Matcher<View> alwaysFails;
   private Matcher<View> nullViewMatcher;
+  private Context mTargetContext;
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
-    presentView = new View(getInstrumentation().getTargetContext());
+    mTargetContext = getTargetContext();
+    presentView = new View(mTargetContext);
     absentView = null;
     absentException = null;
     alwaysAccepts = is(presentView);
@@ -63,104 +77,71 @@ public class ViewAssertionsTest extends InstrumentationTestCase {
 
     presentException = new NoMatchingViewException.Builder()
         .withViewMatcher(alwaysFails)
-        .withRootView(new View(getInstrumentation().getTargetContext()))
+        .withRootView(new View(mTargetContext))
         .build();
   }
 
-  public void testViewPresent_MatcherFail() {
-    try {
-      matches(alwaysFails).check(presentView, absentException);
-    } catch (AssertionFailedError expected) {
-      return;
-    }
-    // cannot place inside try block, would be caught.
-    fail("Should not accept.");
+  @Test
+  public void viewPresent_MatcherFail() {
+    expectedException.expect(AssertionFailedError.class);
+    matches(alwaysFails).check(presentView, absentException);
   }
 
-  public void testViewPresent_MatcherPass() {
-    try {
-      matches(alwaysAccepts).check(presentView, absentException);
-    } catch (AssertionError error) {
-      throw new RuntimeException("Should not die!!!", error);
-    }
+  @Test
+  public void viewPresent_MatcherPass() {
+    matches(alwaysAccepts).check(presentView, absentException);
   }
 
-  public void testViewAbsent_Unexpectedly() {
-    try {
-      matches(alwaysAccepts).check(absentView, presentException);
-    } catch (NoMatchingViewException expected) {
-      return;
-    }
-
-    fail("should not accept, view not present.");
+  @Test
+  public void viewAbsent_Unexpectedly() {
+    expectedException.expect(NoMatchingViewException.class);
+    matches(alwaysAccepts).check(absentView, presentException);
   }
 
-  public void testViewAbsent_AndThatsWhatIWant() {
-    try {
-      matches(nullViewMatcher).check(absentView, presentException);
-    } catch (NoMatchingViewException expected) {
-      return;
-    }
-
-    fail("should not accept, view not present.");
+  @Test
+  public void viewAbsent_AndThatsWhatIWant() {
+    expectedException.expect(NoMatchingViewException.class);
+    matches(nullViewMatcher).check(absentView, presentException);
   }
 
-  public void testSelectedDescendantsMatch_ThereAreNone() {
+  @Test
+  public void selectedDescendantsMatch_ThereAreNone() {
     View grany = setUpViewHierarchy();
-
-    try {
-      selectedDescendantsMatch(withText("welfjkw"), hasContentDescription())
+    selectedDescendantsMatch(withText("welfjkw"), hasContentDescription())
           .check(grany, absentException);
-    } catch (AssertionError error) {
-      throw new RuntimeException("Should not die!!!", error);
-    }
   }
 
-  public void testSelectedDescendantsMatch_SelectedDescendantsMatch() {
+  @Test
+  public void selectedDescendantsMatch_SelectedDescendantsMatch() {
     View grany = setUpViewHierarchy();
-
-    try {
-      selectedDescendantsMatch(withText("has content description"), hasContentDescription())
+    selectedDescendantsMatch(withText("has content description"), hasContentDescription())
           .check(grany, absentException);
-    } catch (AssertionError error) {
-      throw new RuntimeException("Should not die!!!", error);
-    }
   }
 
-  public void testSelectedDescendantsMatch_SelectedDescendantsDoNotMatch() {
+  @Test
+  public void selectedDescendantsMatch_SelectedDescendantsDoNotMatch() {
     View grany = setUpViewHierarchy();
-
-    try {
-      selectedDescendantsMatch(withText("no content description"), hasContentDescription())
-          .check(grany, absentException);
-    } catch (AssertionFailedError expected) {
-      return;
-    }
-
-    fail("should fail because descendants do not match.");
+    expectedException.expect(AssertionFailedError.class);
+    selectedDescendantsMatch(withText("no content description"), hasContentDescription())
+        .check(grany, absentException);
   }
 
-  public void testSelectedDescendantsMatch_SelectedDescendantsMatchAndDoNotMatch() {
+  @Test
+  public void selectedDescendantsMatch_SelectedDescendantsMatchAndDoNotMatch() {
     View grany = setUpViewHierarchy();
-
-    try {
-      selectedDescendantsMatch(isAssignableFrom(TextView.class), hasContentDescription())
+    expectedException.expect(AssertionFailedError.class);
+    selectedDescendantsMatch(isAssignableFrom(TextView.class), hasContentDescription())
           .check(grany, absentException);
-    } catch (AssertionFailedError expected) {
-      return;
-    }
-
-    fail("should fail because not all descendants match.");
   }
 
   private View setUpViewHierarchy() {
-    TextView v1 = new TextView(getInstrumentation().getTargetContext());
+    TextView v1 = new TextView(mTargetContext);
     v1.setText("no content description");
-    TextView v2 = new TextView(getInstrumentation().getTargetContext());
+    TextView v2 = new TextView(mTargetContext);
     v2.setText("has content description");
     v2.setContentDescription("content description");
-    ViewGroup parent = new RelativeLayout(getInstrumentation().getTargetContext());
-    View grany = new ScrollView(getInstrumentation().getTargetContext());
+    ViewGroup parent = new RelativeLayout(mTargetContext);
+    View grany = new ScrollView(mTargetContext);
     ((ViewGroup) grany).addView(parent);
     parent.addView(v1);
     parent.addView(v2);

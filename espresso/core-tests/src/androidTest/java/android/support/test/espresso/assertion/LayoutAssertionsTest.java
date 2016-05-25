@@ -16,86 +16,65 @@
 
 package android.support.test.espresso.assertion;
 
+import android.support.test.espresso.NoMatchingViewException;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.LayoutIssuesActivity;
+import android.support.test.testapp.R;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import junit.framework.AssertionFailedError;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-
-import android.support.test.espresso.NoMatchingViewException;
-import android.support.test.testapp.LayoutIssuesActivity;
-import android.support.test.testapp.R;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
-import android.test.suitebuilder.annotation.Suppress;
-
-import junit.framework.AssertionFailedError;
+import static org.junit.rules.ExpectedException.none;
 
 /**
  * Integration tests for {@link LayoutAssertions}.
  */
 @LargeTest
-public class LayoutAssertionsTest extends ActivityInstrumentationTestCase2<LayoutIssuesActivity> {
+@RunWith(AndroidJUnit4.class)
+public class LayoutAssertionsTest {
 
-  public LayoutAssertionsTest() {
-    super(LayoutIssuesActivity.class);
+  @Rule
+  public ActivityTestRule<LayoutIssuesActivity> rule =
+      new ActivityTestRule<>(LayoutIssuesActivity.class);
+
+  @Rule
+  public ExpectedException expectedException = none();
+
+  @Test
+  public void assertNoEllipsizedText() {
+    expectedException.expect(AssertionFailedError.class);
+    onView(isRoot()).check(LayoutAssertions.noEllipsizedText());
   }
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    getActivity();
-  }
-
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
-  public void testAssertNoEllipsizedText() {
-    try {
-      onView(isRoot()).check(LayoutAssertions.noEllipsizedText());
-    } catch (AssertionFailedError expected) { return; }
-    fail("Ellipsized text is not detected");
-  }
-
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
-  public void testAssertNoMultilineButtons() {
+  @Test
+  public void assertNoMultilineButtons() {
     onView(withId(R.id.wrap)).perform(click());
-    try {
-      onView(isRoot()).check(LayoutAssertions.noMultilineButtons());
-    } catch (AssertionFailedError expected) { return; }
-    fail("Multiline button is not detected");
+    expectedException.expect(AssertionFailedError.class);
+    onView(isRoot()).check(LayoutAssertions.noMultilineButtons());
   }
 
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
-  public void testAssertNoOverlaps() {
+  @Test
+  public void assertNoOverlaps() {
     onView(withId(R.id.length)).perform(click());
-    try {
-      onView(isRoot()).check(LayoutAssertions.noOverlaps());
-    } catch (AssertionFailedError expected) { return; }
-    fail("Overlaps are not detected");
+    expectedException.expect(AssertionFailedError.class);
+    onView(isRoot()).check(LayoutAssertions.noOverlaps());
   }
 
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
-  public void testAssertNoOverlapsViewNotFound() {
+  @Test
+  public void assertNoOverlapsViewNotFound() {
     onView(withId(R.id.length)).perform(click());
-    try {
-      onView(withText("nonexistent")).check(LayoutAssertions.noOverlaps());
-    } catch (NoMatchingViewException expected) { return; }
-    fail("NoMatchingViewException should be thrown");
+    expectedException.expect(NoMatchingViewException.class);
+    onView(withText("nonexistent")).check(LayoutAssertions.noOverlaps());
   }
 }

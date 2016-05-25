@@ -32,6 +32,8 @@ import android.support.test.filters.SdkSuppress;
 import android.support.test.espresso.UiController;
 import android.support.test.espresso.ViewAction;
 import android.support.test.espresso.matcher.ViewMatchers;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.support.test.testapp.GestureActivity;
 import android.support.test.testapp.R;
 
@@ -40,38 +42,43 @@ import android.test.suitebuilder.annotation.LargeTest;
 import android.view.View;
 
 import org.hamcrest.Matcher;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * UI tests for ClickAction, LongClickAction and DoubleClickAction.
  */
 @LargeTest
-public class EventActionIntegrationTest extends ActivityInstrumentationTestCase2<GestureActivity> {
+@RunWith(AndroidJUnit4.class)
+public class EventActionIntegrationTest {
 
-  @SuppressWarnings("deprecation")
-  public EventActionIntegrationTest() {
-    // Keep froyo happy.
-    super("android.support.test.testapp", GestureActivity.class);
-  }
+  @Rule
+  public ActivityTestRule<GestureActivity> rule = new ActivityTestRule<>(GestureActivity.class);
+  private GestureActivity activity;
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
+    activity = rule.getActivity();
   }
 
-  public void testClick() {
-    onView(withText(is(getActivity().getString(R.string.text_click))))
+  @Test
+  public void clickTesting() {
+    onView(withText(is(activity.getString(R.string.text_click))))
         .check(matches(not(isDisplayed())));
     onView(withId(is(R.id.gesture_area))).perform(click());
     onView(withId(is(R.id.text_click))).check(matches(isDisplayed()));
-    onView(withText(is(getActivity().getString(R.string.text_click))))
+    onView(withText(is(activity.getString(R.string.text_click))))
         .check(matches(isDisplayed()));
   }
 
-  public void testBadClick() {
-    onView(withText(is(getActivity().getString(R.string.text_click))))
+  @Test
+  public void badClickTesting() {
+    onView(withText(is(activity.getString(R.string.text_click))))
         .check(matches(not(isDisplayed())));
-    getActivity().setTouchDelay(700);
+    final GestureActivity activity = this.activity;
+    activity.setTouchDelay(700);
 
     onView(withId(is(R.id.gesture_area))).perform(click(
         new ViewAction() {
@@ -79,40 +86,44 @@ public class EventActionIntegrationTest extends ActivityInstrumentationTestCase2
           public String getDescription() {
             return "Handle tap->longclick.";
           }
+
           @Override
           public Matcher<View> getConstraints() {
             return isAssignableFrom(View.class);
           }
+
           @Override
           public void perform(UiController uiController, View view) {
-            getActivity().setTouchDelay(0);
+            activity.setTouchDelay(0);
           }
         }));
 
 
     onView(withId(is(R.id.text_click))).check(matches(isDisplayed()));
-    onView(withText(is(getActivity().getString(R.string.text_click))))
+    onView(withText(is(this.activity.getString(R.string.text_click))))
         .check(matches(isDisplayed()));
   }
 
   @SdkSuppress(minSdkVersion=15)
-  public void testLongClick() {
-    onView(withText(is(getActivity().getString(R.string.text_long_click))))
+  @Test
+  public void longClickTesting() {
+    onView(withText(is(activity.getString(R.string.text_long_click))))
         .check(matches(not(isDisplayed())));
     onView(withId(is(R.id.gesture_area))).perform(longClick());
     onView(withId(is(R.id.text_long_click))).check(matches(isDisplayed()));
-    onView(withText(is(getActivity().getString(R.string.text_long_click))))
+    onView(withText(is(activity.getString(R.string.text_long_click))))
         .check(matches(isDisplayed()));
   }
 
   @SdkSuppress(minSdkVersion=15)
-  public void testDoubleClick() {
-    onView(withText(is(getActivity().getString(R.string.text_double_click))))
+  @Test
+  public void doubleClickTesting() {
+    onView(withText(is(activity.getString(R.string.text_double_click))))
         .check(matches(not(ViewMatchers.isDisplayed())));
     onView(withId(is(R.id.gesture_area))).perform(doubleClick());
     onView(withId(is(R.id.text_double_click))).check(matches(isDisplayed()));
     onView(withText(is("Double Click"))).check(matches(isDisplayed()));
-    onView(withText(is(getActivity().getString(R.string.text_double_click))))
+    onView(withText(is(activity.getString(R.string.text_double_click))))
         .check(matches(isDisplayed()));
   }
 }

@@ -16,27 +16,35 @@
 
 package android.support.test.espresso.assertion;
 
+import android.support.test.espresso.assertion.PositionAssertions.Position;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
+import android.view.View;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+import static android.support.test.InstrumentationRegistry.getContext;
 import static android.support.test.espresso.assertion.PositionAssertions.isRelativePosition;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 
-import android.support.test.espresso.assertion.PositionAssertions.Position;
-
-import android.test.AndroidTestCase;
-import android.view.View;
-
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
 /**
  * Test case for {@link PositionAssertions}.
  */
-public class PositionAssertionsUnitTest extends AndroidTestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class PositionAssertionsUnitTest {
   private static final int AXIS_X = 0;
   private static final int AXIS_Y = 1;
 
-  public void testIsRelativePosition_NoOverlap() {
+  @Test
+  public void isRelativePosition_NoOverlap() {
     View v1 = setupView(10 /* x */, 10 /* y */, 30 /* width */, 20 /* height */);
     View v2 = setupView(100 /* x */, 100 /* y */, 15 /* width */, 10 /* height */);
 
@@ -58,7 +66,8 @@ public class PositionAssertionsUnitTest extends AndroidTestCase {
         isRelativePosition(v2, v1, Position.BOTTOM_ALIGNED));
   }
 
-  public void testIsRelativePosition_Overlap() {
+  @Test
+  public void isRelativePosition_Overlap() {
     // 2 views v1 is overlapping with v2
     View v1 = setupView(10 /* x */, 10 /* y */, 30 /* width */, 20 /* height */);
     // Test the case of 2 Views, v1 left of v2 with 1 pixel overlap at the border
@@ -83,7 +92,8 @@ public class PositionAssertionsUnitTest extends AndroidTestCase {
         isRelativePosition(v2, v1, Position.BOTTOM_ALIGNED));
   }
 
-  public void testIsRelativePosition_AlignedLeft() {
+  @Test
+  public void isRelativePosition_AlignedLeft() {
     // 2 views aligned left at x=10
     View v1 = setupView(10 /* x */, 10 /* y */, 30 /* width */, 20 /* height */);
     View v2 = setupView(10 /* x */, 100 /* y */, 15 /* width */, 10 /* height */);
@@ -98,7 +108,8 @@ public class PositionAssertionsUnitTest extends AndroidTestCase {
         isRelativePosition(v2, v1, Position.RIGHT_OF));
   }
 
-  public void testIsRelativePosition_AlignedRight() {
+  @Test
+  public void isRelativePosition_AlignedRight() {
     // 2 views that aligned to right at x = 40
     View v1 = setupView(10 /* x */, 10 /* y */, 30 /* width */, 30 /* height */);
     View v2 = setupView(30 /* x */, 20 /* y */, 10 /* width */, 10 /* height */);
@@ -113,7 +124,8 @@ public class PositionAssertionsUnitTest extends AndroidTestCase {
         isRelativePosition(v2, v1, Position.RIGHT_OF));
   }
 
-  public void testIsRelativePosition_AlignedTop() {
+  @Test
+  public void isRelativePosition_AlignedTop() {
     // 2 views that aligned TOP at y = 10
     View v1 = setupView(10 /* x */, 10 /* y */, 30 /* width */, 30 /* height */);
     View v2 = setupView(50 /* x */, 10 /* y */, 10 /* width */, 10 /* height */);
@@ -128,7 +140,8 @@ public class PositionAssertionsUnitTest extends AndroidTestCase {
         + getDebugDetails(v1, v2), isRelativePosition(v2, v1, Position.BELOW));
   }
 
-  public void testIsRelativePosition_AlignedBottom() {
+  @Test
+  public void isRelativePosition_AlignedBottom() {
     // 2 views that aligned Bottom at y = 100
     View v1 = setupView(10 /* x */, 10 /* y */, 30 /* width */, 90 /* height */);
     View v2 = setupView(20 /* x */, 50 /* y */, 10 /* width */, 50 /* height */);

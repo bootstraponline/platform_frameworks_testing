@@ -16,6 +16,17 @@
 
 package android.support.test.espresso.action;
 
+import android.support.test.filters.SdkSuppress;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.R;
+import android.support.test.testapp.SendActivity;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
@@ -25,33 +36,19 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
-import android.support.test.filters.SdkSuppress;
-import android.support.test.testapp.R;
-import android.support.test.testapp.SendActivity;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
-
 /**
  * Ensures view root ordering works properly.
  */
 @LargeTest
-public class WindowOrderingIntegrationTest extends ActivityInstrumentationTestCase2<SendActivity> {
-  @SuppressWarnings("deprecation")
-  public WindowOrderingIntegrationTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", SendActivity.class);
-  }
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
-  }
+@RunWith(AndroidJUnit4.class)
+public class WindowOrderingIntegrationTest {
+  @Rule
+  public ActivityTestRule<SendActivity> rule = new ActivityTestRule<>(SendActivity.class);
 
   // popup menus are post honeycomb.
- @SdkSuppress(minSdkVersion=11)
-  public void testPopupMenu() {
+  @SdkSuppress(minSdkVersion=11)
+  @Test
+  public void popupMenuTesting() {
     onView(withText(R.string.item_1_text))
         .check(doesNotExist());
     onView(withId(R.id.make_popup_menu_button))
@@ -63,8 +60,8 @@ public class WindowOrderingIntegrationTest extends ActivityInstrumentationTestCa
         .check(doesNotExist());
   }
 
-  public void testPopupWindow() {
-    getActivity();
+  @Test
+  public void popupWindowTesting() {
     onView(withId(R.id.popup_title))
         .check(doesNotExist());
     onView(withId(R.id.make_popup_view_button))
@@ -76,7 +73,8 @@ public class WindowOrderingIntegrationTest extends ActivityInstrumentationTestCa
         .check(doesNotExist());
   }
 
-  public void testDialog() {
+  @Test
+  public void dialogTesting() {
     onView(withText(R.string.dialog_title))
         .check(doesNotExist());
     onView(withId(R.id.make_alert_dialog))
