@@ -16,31 +16,45 @@
 
 package android.support.test.espresso.intent;
 
-import static android.support.test.espresso.intent.Intents.times;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.anyIntent;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.toPackage;
-import static org.hamcrest.CoreMatchers.allOf;
-
-import com.google.common.collect.Lists;
-
 import android.app.Instrumentation.ActivityResult;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.MediumTest;
+
+import com.google.common.collect.Lists;
 
 import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
 
 import org.hamcrest.Matcher;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static android.support.test.espresso.intent.Intents.times;
+import static android.support.test.espresso.intent.matcher.IntentMatchers.anyIntent;
+import static android.support.test.espresso.intent.matcher.IntentMatchers.toPackage;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.junit.Assert.assertTrue;
+import static org.junit.rules.ExpectedException.none;
+
 /**
  * Unit tests for {@Intents}.
  */
-public class IntentsTest extends TestCase {
+@MediumTest
+@RunWith(AndroidJUnit4.class)
+public class IntentsTest {
+
+  @Rule
+  public ExpectedException expectedException = none();
 
   private Intents intento;
 
@@ -65,31 +79,34 @@ public class IntentsTest extends TestCase {
     public void reset() {}
   };
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     intento = new Intents(RESETTING_STUB);
     intento.internalInit();
   }
 
-  public void testValidateAnyIntent() {
+  @Test
+  public void validateAnyIntent() {
     intento.internalIntended(anyIntent(), times(1),
         Lists.newArrayList(buildVerifiableIntent(Intent.ACTION_VIEW, "com.google.some.package")));
   }
 
-  public void testValidateToOnePackage() {
+  @Test
+  public void validateToOnePackage() {
     intento.internalIntended(toPackage("com.google.some.package"), times(1),
         Lists.newArrayList(buildVerifiableIntent(Intent.ACTION_VIEW, "com.google.some.package")));
   }
 
-  public void testValidateToMultiplePackagesOne() {
+  @Test
+  public void validateToMultiplePackagesOne() {
     intento.internalIntended(toPackage("com.google.some.package"), times(1),
         Lists.newArrayList(buildVerifiableIntent(
             Intent.ACTION_VIEW, "com.google.some.package", "com.google.android.other")));
   }
 
   @SuppressWarnings("unchecked") // TODO(user): remove after upgrading hamcrest to 1.3
-  public void testValidateToMultiplePackagesTwo() {
+  @Test
+  public void validateToMultiplePackagesTwo() {
     intento.internalIntended(
         allOf(toPackage("com.google.some.package"), toPackage("com.google.android.other")),
             times(1),
@@ -97,30 +114,23 @@ public class IntentsTest extends TestCase {
                 Intent.ACTION_VIEW, "com.google.some.package", "com.google.android.other")));
   }
 
-  public void testValidateNoPackagesFail() {
-    try {
-      intento.internalIntended(toPackage("com.google.some.package"), times(1),
-          new ArrayList<VerifiableIntent>());
-      // Can't call fail() because it throws an AssertionFailedError, just like intended() does.
-      throw new IllegalStateException("Expected to fail on previous line.");
-    } catch (AssertionFailedError e) {
-      // expected.
-    }
+  @Test
+  public void validateNoPackagesFail() {
+    expectedException.expect(AssertionFailedError.class);
+    intento.internalIntended(toPackage("com.google.some.package"), times(1),
+        new ArrayList<VerifiableIntent>());
   }
 
-  public void testValidateMultiplePackagesFail() {
-    try {
-      intento.internalIntended(toPackage("com.google.some.fail"), times(1),
-          Lists.newArrayList(buildVerifiableIntent(
-              Intent.ACTION_VIEW, "com.google.some.package", "com.google.android.other")));
-      // Can't call fail() because it throws an AssertionFailedError, just like intended() does.
-      throw new IllegalStateException("Expected to fail on previous line.");
-    } catch (AssertionFailedError e) {
-      // expected.
-    }
+  @Test
+  public void validateMultiplePackagesFail() {
+    expectedException.expect(AssertionFailedError.class);
+    intento.internalIntended(toPackage("com.google.some.fail"), times(1),
+        Lists.newArrayList(buildVerifiableIntent(
+            Intent.ACTION_VIEW, "com.google.some.package", "com.google.android.other")));
   }
 
-  public void testIntended_MultipleCalls() {
+  @Test
+  public void intended_MultipleCalls() {
     List<VerifiableIntent> intents = Lists.newArrayList(
         buildVerifiableIntent(Intent.ACTION_VIEW, "com.google.android.A"),
         buildVerifiableIntent(Intent.ACTION_VIEW, "com.google.android.B"),
@@ -130,7 +140,8 @@ public class IntentsTest extends TestCase {
     intento.internalIntended(toPackage("com.google.android.C"), times(1), intents);
   }
 
-  public void testIntended_MultipleCallsWithSameIntent() {
+  @Test
+  public void intended_MultipleCallsWithSameIntent() {
     List<VerifiableIntent> intents = Lists.newArrayList(
         buildVerifiableIntent(Intent.ACTION_VIEW, "com.google.android.A"),
         buildVerifiableIntent(Intent.ACTION_VIEW, "com.google.android.A"));
@@ -175,11 +186,13 @@ public class IntentsTest extends TestCase {
     intento.internalIntended(anyIntent(), times(2), intents);
   }
 
-  public void testIntended_NoIntents() {
+  @Test
+  public void intended_NoIntents() {
     intento.internalIntended(anyIntent(), times(0), new ArrayList<VerifiableIntent>());
   }
 
-  public void testAssertNoUnverifiedIntents() {
+  @Test
+  public void assertNoUnverifiedIntents() {
     List<VerifiableIntent> intents = Lists.newArrayList(
         buildVerifiableIntent(Intent.ACTION_VIEW, "com.google.android.A"),
         buildVerifiableIntent(Intent.ACTION_VIEW, "com.google.android.B"),
@@ -270,11 +283,10 @@ public class IntentsTest extends TestCase {
     return resolveInfoList;
   }
 
-  @Override
+  @After
   public void tearDown() throws Exception {
     intento.internalRelease();
     intento = null;
-    super.tearDown();
   }
 
 }

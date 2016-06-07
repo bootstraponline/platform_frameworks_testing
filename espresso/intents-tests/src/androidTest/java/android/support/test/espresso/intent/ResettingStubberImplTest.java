@@ -16,37 +16,51 @@
 
 package android.support.test.espresso.intent;
 
+import android.app.Instrumentation.ActivityResult;
+import android.content.Intent;
+import android.net.Uri;
+import android.support.test.annotation.UiThreadTest;
+import android.support.test.rule.UiThreadTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.MediumTest;
+
+import org.hamcrest.Matcher;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.intent.matcher.IntentMatchers.hasAction;
 import static android.support.test.espresso.intent.matcher.IntentMatchers.hasData;
 import static android.support.test.espresso.intent.matcher.UriMatchers.hasHost;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.equalTo;
-
-import android.app.Instrumentation.ActivityResult;
-import android.content.Intent;
-import android.net.Uri;
-import android.test.InstrumentationTestCase;
-import android.test.UiThreadTest;
-
-import org.hamcrest.Matcher;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for {@link ResettingStubberImpl}.
  */
-public class ResettingStubberImplTest extends InstrumentationTestCase {
+@MediumTest
+@RunWith(AndroidJUnit4.class)
+public class ResettingStubberImplTest {
+
+  @Rule
+  public UiThreadTestRule uiThreadTestRule = new UiThreadTestRule();
 
   private ResettingStubber resettingStubber;
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     resettingStubber = new ResettingStubberImpl();
     resettingStubber.initialize();
   }
 
   @UiThreadTest
-  public void testIsInitialized() {
+  @Test
+  public void isInitialized() {
     assertTrue(resettingStubber.isInitialized());
 
     resettingStubber.reset();
@@ -57,7 +71,8 @@ public class ResettingStubberImplTest extends InstrumentationTestCase {
   }
 
   @UiThreadTest
-  public void testReset_getActivityResultForIntent() {
+  @Test
+  public void reset_getActivityResultForIntent() {
     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.android.com"));
     ActivityResult result = new ActivityResult(10, intent);
     resettingStubber.setActivityResultForIntent(any(Intent.class), result);
@@ -68,9 +83,9 @@ public class ResettingStubberImplTest extends InstrumentationTestCase {
     assertEquals(null, resettingStubber.getActivityResultForIntent(intent));
   }
 
-  @SuppressWarnings("unchecked") // TODO(user): remove after upgrading hamcrest to 1.3
-  @UiThreadTest
-  public void testSetActivityResultForIntent() {
+  @UiThreadTest // TODO(user): remove after upgrading hamcrest to 1.3
+  @Test
+  public void setActivityResultForIntent() {
     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.android.com"));
     ActivityResult result = new ActivityResult(10, intent);
     resettingStubber.setActivityResultForIntent(
@@ -81,9 +96,9 @@ public class ResettingStubberImplTest extends InstrumentationTestCase {
         "Activity Result Not Equal.", resettingStubber.getActivityResultForIntent(intent), result);
   }
 
-  @SuppressWarnings("unchecked") // TODO(user): remove after upgrading hamcrest to 1.3
-  @UiThreadTest
-  public void testSetActivityResultMultipleTime() {
+  @UiThreadTest // TODO(user): remove after upgrading hamcrest to 1.3
+  @Test
+  public void setActivityResultMultipleTime() {
     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.android.com"));
     ActivityResult result = new ActivityResult(10, intent);
     ActivityResult duplicateResult =

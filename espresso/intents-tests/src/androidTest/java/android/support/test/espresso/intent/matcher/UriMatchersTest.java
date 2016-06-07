@@ -16,6 +16,18 @@
 
 package android.support.test.espresso.intent.matcher;
 
+import android.net.Uri;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
+
+import com.google.common.collect.Sets;
+
+import org.hamcrest.Matcher;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.util.Set;
+
 import static android.support.test.espresso.intent.matcher.UriMatchers.getQueryParameterNames;
 import static android.support.test.espresso.intent.matcher.UriMatchers.hasHost;
 import static android.support.test.espresso.intent.matcher.UriMatchers.hasParamWithName;
@@ -26,63 +38,64 @@ import static android.support.test.espresso.intent.matcher.UriMatchers.hasScheme
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
-
-import com.google.common.collect.Sets;
-
-import android.net.Uri;
-
-import junit.framework.TestCase;
-
-import org.hamcrest.Matcher;
-
-import java.util.Set;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for {@link UriMatchers}.
  */
-public class UriMatchersTest extends TestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class UriMatchersTest {
 
   private final Uri uri =
       Uri.parse("https://www.google.com/search?q=Matcher&aq=f&oq=Matcher&sourceid=chrome&ie=UTF-8");
 
-  public void testHasHost() {
+  @Test
+  public void hasHostTesting() {
     String host = "www.google.com";
     assertTrue("HasHost didn't match", hasHost(host).matches(uri));
     assertTrue("HasHost didn't match", hasHost(equalTo(host)).matches(uri));
   }
 
-  public void testHasHostDoesNotMatch() {
+  @Test
+  public void hasHostDoesNotMatch() {
     String host = "www.android.com";
     assertFalse("HasHost Matched, But it shouldn't have", hasHost(host).matches(uri));
     assertFalse("HasHost Matched, But it shouldn't have", hasHost(equalTo(host)).matches(uri));
   }
 
-  public void testHasPath() {
+  @Test
+  public void hasPathTesting() {
     String pathName = "/search";
     assertTrue("HasPath didn't match", hasPath(pathName).matches(uri));
     assertTrue("HasPath didn't match", hasPath(equalTo(pathName)).matches(uri));
   }
 
-  public void testHasPathDoesNotMatch() {
+  @Test
+  public void hasPathDoesNotMatch() {
     String pathName = "/query";
     assertFalse("HasPath Matched, But it shouldn't have", hasPath(pathName).matches(uri));
     assertFalse("HasPath Matched, But it shouldn't have", hasPath(equalTo(pathName)).matches(uri));
   }
 
-  public void testHasScheme() {
+  @Test
+  public void hasSchemeTesting() {
     Uri schemeUri = Uri.parse("market://details?id=com.google.android.apps.plus");
     assertTrue("HasPath didn't match", hasScheme("market").matches(schemeUri));
     assertTrue("HasPath didn't match", hasScheme(equalTo("market")).matches(schemeUri));
   }
 
-  public void testHasSchemeDoesNotMatch() {
+  @Test
+  public void hasSchemeDoesNotMatch() {
     Uri schemeUri = Uri.parse("market://details?id=com.google.android.apps.plus");
     assertFalse("HasPath Matched, But it shouldn't have", hasScheme("details").matches(schemeUri));
     assertFalse("HasPath Matched, But it shouldn't have",
         hasScheme(equalTo("details")).matches(schemeUri));
   }
 
-  public void testHasSchemeSpecificPart() {
+  @Test
+  public void hasSchemeSpecificPartTesting() {
     Uri schemeUri = Uri.parse("tel:123456789");
     Matcher<Uri> hasSchemeMatcher = hasSchemeSpecificPart(equalTo("tel"), equalTo("123456789"));
     assertTrue("HasScheme didn't match",
@@ -90,7 +103,8 @@ public class UriMatchersTest extends TestCase {
     assertTrue("HasScheme didn't match", hasSchemeMatcher.matches(schemeUri));
   }
 
-  public void testHasSchemeSpecificPartDoesNotMatch() {
+  @Test
+  public void hasSchemeSpecificPartDoesNotMatch() {
     Uri schemeUri = Uri.parse("tel:123456789");
     Matcher<Uri> hasSchemeMatcher = hasSchemeSpecificPart(equalTo("tel"), equalTo("987654321"));
     assertFalse("HasScheme Matched, But it shouldn't have",
@@ -98,13 +112,15 @@ public class UriMatchersTest extends TestCase {
     assertFalse("HasScheme Matched, But it shouldn't have", hasSchemeMatcher.matches(schemeUri));
   }
 
-  public void testHasParamName() {
+  @Test
+  public void hasParamName() {
     String paramName = "sourceid";
     assertTrue("HasParam didn't match", hasParamWithName(paramName).matches(uri));
     assertTrue("HasParam didn't match", hasParamWithName(equalTo(paramName)).matches(uri));
   }
 
-  public void testHasParamNameDoesNotMatch() {
+  @Test
+  public void hasParamNameDoesNotMatch() {
     String paramName = "param";
     assertFalse("HasParamName Matched, But it shouldn't have",
         hasParamWithName(paramName).matches(uri));
@@ -112,21 +128,24 @@ public class UriMatchersTest extends TestCase {
         hasParamWithName(equalTo(paramName)).matches(uri));
   }
 
-  public void testHasParamWithValue() {
+  @Test
+  public void hasParamWithValueTesting() {
     Matcher<Uri> hasParamWithValue = hasParamWithValue(equalTo("sourceid"), equalTo("chrome"));
     assertTrue("HasParamWithValue didn't match",
         hasParamWithValue("sourceid", "chrome").matches(uri));
     assertTrue("HasParamWithValue didn't match", hasParamWithValue.matches(uri));
   }
 
-  public void testHasParamWithValueMatcherDoesNotMatch() {
+  @Test
+  public void hasParamWithValueMatcherDoesNotMatch() {
     Matcher<Uri> hasParamWithValue = hasParamWithValue(equalTo("sourceid"), equalTo("google"));
     assertFalse("HasParamWithValue Matched, But it shouldn't have",
         hasParamWithValue("sourceid", "google").matches(uri));
     assertFalse("HasParamWithValue Matched, But it shouldn't have", hasParamWithValue.matches(uri));
   }
 
-  public void testAllOfMatcher() {
+  @Test
+  public void allOfMatcher() {
     @SuppressWarnings("unchecked")
     Matcher<Uri> allOfMatcher = allOf(hasHost(equalTo("www.google.com")),
         hasParamWithName("sourceid"),
@@ -141,7 +160,8 @@ public class UriMatchersTest extends TestCase {
     assertTrue("AllOf matcher didn't match", allOfMatcher.matches(uri));
   }
 
-  public void testAllOfMatcherForMailToScheme() {
+  @Test
+  public void allOfMatcherForMailToScheme() {
     @SuppressWarnings("unchecked")
     Uri schemeUri = Uri.parse("mailto:nobody@google.com");
     Matcher<Uri> allOfMatcher = allOf(hasScheme(equalTo("mailto")),
@@ -150,7 +170,8 @@ public class UriMatchersTest extends TestCase {
     assertTrue("AllOf matcher for MailTo Scheme didn't match", allOfMatcher.matches(schemeUri));
   }
 
-  public void testAllOfWithWrongMatcher() {
+  @Test
+  public void allOfWithWrongMatcher() {
     @SuppressWarnings("unchecked")
     Matcher<Uri> allOfMatcher = allOf(
         hasHost("www.google.com"), hasParamWithName("sourceid"),
@@ -158,7 +179,8 @@ public class UriMatchersTest extends TestCase {
     assertFalse("Matcher shouldn't have matched.", allOfMatcher.matches(uri));
   }
 
-  public void testAnyOfMatcherWithOneMatch() {
+  @Test
+  public void anyOfMatcherWithOneMatch() {
     @SuppressWarnings("unchecked")
     Matcher<Uri> anyOfMatcher = anyOf(
         hasHost(equalTo("www.google.com")), hasParamWithName(equalTo("param1")),
@@ -167,7 +189,8 @@ public class UriMatchersTest extends TestCase {
     assertTrue("AnyOf matcher didn't match", anyOfMatcher.matches(uri));
   }
 
-  public void testAnyOfMatcherWithMoreThanOneMatch() {
+  @Test
+  public void anyOfMatcherWithMoreThanOneMatch() {
     @SuppressWarnings("unchecked")
     Matcher<Uri> anyOfMatcher = anyOf(
         hasHost(equalTo("www.google.com")), hasPath(equalTo("/search")),
@@ -176,13 +199,14 @@ public class UriMatchersTest extends TestCase {
     assertTrue("AnyOf matcher didn't match", anyOfMatcher.matches(uri));
   }
 
-  public void testGetQueryParameterNames() {
+  @Test
+  public void getQueryParameterNamesTesting() {
     Set<String> paramNames = getQueryParameterNames(uri);
     assertTrue(paramNames.equals(Sets.newHashSet("q", "aq", "oq", "sourceid", "ie")));
   }
 
-  public void testMatches() {
-    @SuppressWarnings("unchecked")
+  @Test
+  public void matches() {
     Matcher<Uri> matcher = allOf(hasHost(equalTo("www.google.com")), hasPath(equalTo("/search")),
         hasParamWithValue(equalTo("q"), equalTo("Matcher")),
         hasParamWithValue(equalTo("aq"), equalTo("f")));
