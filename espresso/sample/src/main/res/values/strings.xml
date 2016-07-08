@@ -122,4 +122,6 @@
 
     <string name="image_header">%1$s by %2$s</string>
     <string name="btn_send_broadcast_text">Send Broadcast</string>
+    <string name="button_pick_number">Pick number 7</string>
+    <string name="pick_number_title">Choose a number:</string>
 </resources>

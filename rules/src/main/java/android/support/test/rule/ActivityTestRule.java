@@ -16,20 +16,26 @@
 
 package android.support.test.rule;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Instrumentation;
+import android.app.Instrumentation.ActivityResult;
 import android.content.Intent;
+import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.annotation.Beta;
-import android.support.test.runner.intercepting.SingleActivityFactory;
 import android.support.test.runner.MonitoringInstrumentation;
+import android.support.test.runner.intercepting.SingleActivityFactory;
 import android.util.Log;
 
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.lang.reflect.Field;
+
 import static android.support.test.internal.util.Checks.checkNotNull;
+import static android.support.test.internal.util.Checks.checkState;
 
 /**
  * This rule provides functional testing of a single activity. The activity under test will be
@@ -47,6 +53,8 @@ import static android.support.test.internal.util.Checks.checkNotNull;
 public class ActivityTestRule<T extends Activity> extends UiThreadTestRule {
 
     private static final String TAG = "ActivityInstrumentationRule";
+    public static final String FIELD_RESULT_CODE = "mResultCode";
+    public static final String FIELD_RESULT_DATA = "mResultData";
 
     private final Class<T> mActivityClass;
 
@@ -256,6 +264,39 @@ public class ActivityTestRule<T extends Activity> extends UiThreadTestRule {
         if (mActivity != null) {
             mActivity.finish();
             mActivity = null;
+        }
+    }
+
+
+    /**
+     * This method can be used to retrieve the Activity result of an Activity that has called
+     * setResult. Usually, the result is handled in {@code }onActivityResult} of parent activity,
+     * that has called {@code startActivityForResult}.
+     * <p>
+     * This method must not be called before Acitivity.finish() was called.
+     *
+     * @return the ActivityResult that was set most recently
+     */
+    public ActivityResult getActivityResult() {
+        T activity = mActivity;
+        checkState(activity.isFinishing());
+
+        try {
+            Field resultCodeField = Activity.class.getDeclaredField(FIELD_RESULT_CODE);
+            resultCodeField.setAccessible(true);
+
+            Field resultDataField = Activity.class.getDeclaredField(FIELD_RESULT_DATA);
+            resultDataField.setAccessible(true);
+
+            return new ActivityResult((int) resultCodeField.get(activity),
+                    (Intent) resultDataField.get(activity));
+
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException("Looks like the Android Activity class has changed its" +
+                    "private fields for mResultCode or mResultData. " +
+                    "Time to update the reflection code.", e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("Field mResultCode or mResultData is not accessible", e);
         }
     }
 
