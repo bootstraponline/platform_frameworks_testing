@@ -64,6 +64,7 @@
         <activity android:name="TransitionDetailActivity" />
         <activity android:name="KeyboardTestActivity" android:label="Keyboard Test Activity"/>
         <activity android:name="InterceptingActivity" android:label="Test Activity for InterceptingActivityFactory"/>
+        <activity android:name="ScaledViewActivity" android:label="Scaled View Activity" />
     </application>
 
     <uses-permission android:name="android.permission.CALL_PHONE"></uses-permission>
