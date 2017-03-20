@@ -37,6 +37,7 @@
         <activity android:name="ActionBarTestActivity" android:label="actionbar test activity" android:theme="@style/Theme.AppCompat.Light.DarkActionBar"/>
         <activity android:name="SimpleActivity" android:label="simple activity"/>
         <activity android:name="SendActivity" android:label="send activity"/>
+        <activity android:name="PickActivity" android:label="pick activity"/>
         <activity android:name="PickersActivity" android:label="pickers activity"/>
         <activity android:name="DisplayActivity" android:label="display activity"/>
         <activity android:name="DrawerActivity" android:label="drawer activity" android:theme="@style/Theme.AppCompat.Light"/>
