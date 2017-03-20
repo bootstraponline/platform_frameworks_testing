@@ -16,6 +16,7 @@
 
 package android.support.test.espresso.matcher;
 
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.espresso.matcher.PreferenceMatchers.isEnabled;
 import static android.support.test.espresso.matcher.PreferenceMatchers.withKey;
 import static android.support.test.espresso.matcher.PreferenceMatchers.withSummary;
@@ -26,18 +27,25 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
+import android.support.test.runner.AndroidJUnit4;
 import android.support.test.testapp.test.R;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.test.InstrumentationTestCase;
+import android.test.suitebuilder.annotation.SmallTest;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Unit tests for preference matchers.
  */
-public class PreferenceMatchersTest extends InstrumentationTestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class PreferenceMatchersTest {
 
-
-  public void testWithSummary() {
+  @Test
+  public void withSummaryTest() {
     CheckBoxPreference pref = new CheckBoxPreference(getInstrumentation().getContext());
     pref.setSummary(R.string.something);
     assertThat(pref, withSummary(R.string.something));
@@ -47,7 +55,8 @@ public class PreferenceMatchersTest extends InstrumentationTestCase {
     assertThat(pref, withSummaryText(is("Hello World")));
   }
 
-  public void testWithTitle() {
+  @Test
+  public void withTitleTest() {
     CheckBoxPreference pref = new CheckBoxPreference(getInstrumentation().getContext());
     assertThat(pref, not(withTitle(R.string.other_string)));
     assertThat(pref, not(withTitleText("not null")));
@@ -59,8 +68,8 @@ public class PreferenceMatchersTest extends InstrumentationTestCase {
     assertThat(pref, withTitleText(is("Goodbye!!")));
   }
 
-
-  public void testIsEnabled() {
+  @Test
+  public void isEnabledTest() {
     CheckBoxPreference pref = new CheckBoxPreference(getInstrumentation().getContext());
     pref.setEnabled(true);
     assertThat(pref, isEnabled());
@@ -73,7 +82,8 @@ public class PreferenceMatchersTest extends InstrumentationTestCase {
     assertThat(pref2, not(isEnabled()));
   }
 
-  public void testWithKey() {
+  @Test
+  public void withKeyTest() {
     CheckBoxPreference pref = new CheckBoxPreference(getInstrumentation().getContext());
     pref.setKey("foo");
     assertThat(pref, withKey("foo"));

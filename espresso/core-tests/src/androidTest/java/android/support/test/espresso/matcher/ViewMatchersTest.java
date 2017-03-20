@@ -16,6 +16,47 @@
 
 package android.support.test.espresso.matcher;
 
+import android.content.Context;
+import android.graphics.Color;
+import android.support.test.annotation.UiThreadTest;
+import android.support.test.espresso.matcher.ViewMatchers.Visibility;
+import android.support.test.rule.UiThreadTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.test.R;
+import android.test.suitebuilder.annotation.MediumTest;
+import android.text.InputType;
+import android.text.Spannable;
+import android.text.style.ForegroundColorSpan;
+import android.text.util.Linkify;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.Checkable;
+import android.widget.CheckedTextView;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
+import android.widget.Spinner;
+import android.widget.TextView;
+
+import com.google.common.collect.Lists;
+
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
+import java.util.List;
+
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.hasBackground;
 import static android.support.test.espresso.matcher.ViewMatchers.hasContentDescription;
@@ -48,72 +89,53 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-
-import android.support.test.espresso.matcher.ViewMatchers.Visibility;
-import android.support.test.testapp.test.R;
-import com.google.common.collect.Lists;
-
-import android.content.Context;
-import android.graphics.Color;
-import android.test.InstrumentationTestCase;
-import android.test.UiThreadTest;
-import android.text.InputType;
-import android.text.Spannable;
-import android.text.style.ForegroundColorSpan;
-import android.text.util.Linkify;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.Checkable;
-import android.widget.CheckedTextView;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RelativeLayout;
-import android.widget.ScrollView;
-import android.widget.Spinner;
-import android.widget.TextView;
-
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
-
-import java.util.List;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.rules.ExpectedException.none;
 
 /**
  * Unit tests for {@link ViewMatchers}.
  */
-public class ViewMatchersTest extends InstrumentationTestCase {
+@MediumTest
+@RunWith(AndroidJUnit4.class)
+public class ViewMatchersTest {
 
   private static final int UNRECOGNIZED_INPUT_TYPE = 999999;
 
   private Context context;
 
-  @Override
+  @Rule
+  public ExpectedException expectedException = none();
+
+  @Rule
+  public UiThreadTestRule uiThreadTestRule = new UiThreadTestRule();
+
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     context = getInstrumentation().getContext();
   }
 
-  public void testIsAssignableFrom_notAnInstance() {
+  @Test
+  public void isAssignableFrom_notAnInstance() {
     View v = new View(context);
     assertFalse(isAssignableFrom(Spinner.class).matches(v));
   }
 
-  public void testIsAssignableFrom_plainView() {
+  @Test
+  public void isAssignableFrom_plainView() {
     View v = new View(context);
     assertTrue(isAssignableFrom(View.class).matches(v));
   }
 
-  public void testIsAssignableFrom_superclass() {
+  @Test
+  public void isAssignableFrom_superclass() {
     View v = new RadioButton(context);
     assertTrue(isAssignableFrom(Button.class).matches(v));
   }
 
-  @SuppressWarnings("cast")
-  public void testWithContentDescriptionCharSequence() {
+  @Test
+  public void withContentDescriptionCharSequence() {
     View view = new View(context);
     view.setContentDescription(null);
     assertTrue(withContentDescription(nullValue(CharSequence.class)).matches(view));
@@ -124,16 +146,14 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withContentDescription(is((CharSequence) "")).matches(view));
   }
 
-  public void testWithContentDescriptionNull() {
-    try {
-      withContentDescription((Matcher<CharSequence>) null);
-      fail("Should of thrown NPE");
-    } catch (NullPointerException e) {
-      // Good, this is expected.
-    }
+  @Test
+  public void withContentDescriptionNull() {
+    expectedException.expect(NullPointerException.class);
+    withContentDescription((Matcher<CharSequence>) null);
   }
 
-  public void testHasContentDescription() {
+  @Test
+  public void hasContentDescriptionTest() {
     View view = new View(context);
     view.setContentDescription(null);
     assertFalse(hasContentDescription().matches(view));
@@ -142,7 +162,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertTrue(hasContentDescription().matches(view));
   }
 
-  public void testWithContentDescriptionString() {
+  @Test
+  public void withContentDescriptionString() {
     View view = new View(context);
     view.setContentDescription(null);
     assertTrue(withContentDescription(nullValue(String.class)).matches(view));
@@ -153,14 +174,16 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withContentDescription(is("")).matches(view));
   }
 
-  public void testWithContentDescriptionFromResourceId() {
+  @Test
+  public void withContentDescriptionFromResourceId() {
     View view = new View(context);
     view.setContentDescription(context.getString(R.string.something));
     assertFalse(withContentDescription(R.string.other_string).matches(view));
     assertTrue(withContentDescription(R.string.something).matches(view));
   }
 
-  public void testWithId() {
+  @Test
+  public void withIdTest() {
     View view = new View(context);
     view.setId(R.id.testId1);
     assertTrue(withId(is(R.id.testId1)).matches(view));
@@ -168,11 +191,13 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withId(is(1234)).matches(view));
   }
 
-  public void testWithId_describeWithNoResourceLookup() {
+  @Test
+  public void withId_describeWithNoResourceLookup() {
     assertThat(withId(5).toString(), is("with id: 5"));
   }
 
-  public void testWithId_describeWithFailedResourceLookup() {
+  @Test
+  public void withId_describeWithFailedResourceLookup() {
     View view = new View(context);
     Matcher<View> matcher = withId(5);
     // Running matches will allow withId to grab resources from view Context
@@ -180,7 +205,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertThat(matcher.toString(), is("with id: 5 (resource name not found)"));
   }
 
-  public void testWithId_describeWithResourceLookup() {
+  @Test
+  public void withId_describeWithResourceLookup() {
     View view = new View(context);
     Matcher<View> matcher = withId(R.id.testId1);
     // Running matches will allow withId to grab resources from view Context
@@ -188,7 +214,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertThat(matcher.toString(), containsString("id/testId1"));
   }
 
-  public void testWithTagNull() {
+  @Test
+  public void withTagNull() {
     try {
       withTagKey(0, null);
       fail("Should of thrown NPE");
@@ -204,7 +231,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     }
   }
 
-  public void testWithTagObject() {
+  @Test
+  public void withTagObject() {
     View view = new View(context);
     view.setTag(null);
     assertTrue(withTagValue(Matchers.<Object>nullValue()).matches(view));
@@ -216,7 +244,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withTagValue(is((Object) "")).matches(view));
   }
 
-  public void testWithTagKey() {
+  @Test
+  public void withTagKeyTest() {
     View view = new View(context);
     assertFalse(withTagKey(R.id.testId1).matches(view));
     view.setTag(R.id.testId1, "blah");
@@ -234,7 +263,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withTagValue(is((Object) "blah")).matches(view));
   }
 
-  public void testWithTagKeyObject() {
+  @Test
+  public void withTagKeyObject() {
     View view = new View(context);
     String testObjectText1 = "test text1!";
     String testObjectText2 = "test text2!";
@@ -257,7 +287,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withTagValue(is((Object) "blah")).matches(view));
   }
 
-  public void testWithTextNull() {
+  @Test
+  public void withTextNull() {
     try {
       withText((Matcher<String>) null);
       fail("Should of thrown NPE");
@@ -267,7 +298,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
   }
 
   @UiThreadTest
-  public void testCheckBoxMatchers() {
+  @Test
+  public void checkBoxMatchers() {
     assertFalse(isChecked().matches(new Spinner(context)));
     assertFalse(isNotChecked().matches(new Spinner(context)));
 
@@ -311,7 +343,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(isNotChecked().matches(checkable));
   }
 
-  public void testWithTextString() {
+  @Test
+  public void withTextString() {
     TextView textView = new TextView(context);
     textView.setText(null);
     assertTrue(withText(is("")).matches(textView));
@@ -322,7 +355,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withText(is("")).matches(textView));
   }
 
-  public void testHasDescendant() {
+  @Test
+  public void hasDescendantTest() {
     View v = new TextView(context);
     ViewGroup parent = new RelativeLayout(context);
     ViewGroup grany = new ScrollView(context);
@@ -334,7 +368,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(hasDescendant(isAssignableFrom(TextView.class)).matches(v));
   }
 
-  public void testIsDescendantOfA() {
+  @Test
+  public void isDescendantOfATest() {
     View v = new TextView(context);
     ViewGroup parent = new RelativeLayout(context);
     ViewGroup grany = new ScrollView(context);
@@ -345,7 +380,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(isDescendantOfA(isAssignableFrom(LinearLayout.class)).matches(v));
   }
 
-  public void testIsVisible() {
+  @Test
+  public void isVisibleTest() {
     View visible = new View(context);
     visible.setVisibility(View.VISIBLE);
     View invisible = new View(context);
@@ -360,7 +396,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withEffectiveVisibility(Visibility.VISIBLE).matches(visible));
   }
 
-  public void testIsInvisible() {
+  @Test
+  public void isInvisibleTest() {
     View visible = new View(context);
     visible.setVisibility(View.VISIBLE);
     View invisible = new View(context);
@@ -375,7 +412,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertTrue(withEffectiveVisibility(Visibility.INVISIBLE).matches(visible));
   }
 
-  public void testIsGone() {
+  @Test
+  public void isGoneTest() {
     View gone = new View(context);
     gone.setVisibility(View.GONE);
     View visible = new View(context);
@@ -390,7 +428,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertTrue(withEffectiveVisibility(Visibility.GONE).matches(visible));
   }
 
-  public void testIsClickable() {
+  @Test
+  public void isClickableTest() {
     View clickable = new View(context);
     clickable.setClickable(true);
     View notClickable = new View(context);
@@ -399,7 +438,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(isClickable().matches(notClickable));
   }
 
-  public void testIsEnabled() {
+  @Test
+  public void isEnabledTest() {
     View enabled = new View(context);
     enabled.setEnabled(true);
     View notEnabled = new View(context);
@@ -408,7 +448,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(isEnabled().matches(notEnabled));
   }
 
-  public void testIsFocusable() {
+  @Test
+  public void isFocusableTest() {
     View focusable = new View(context);
     focusable.setFocusable(true);
     View notFocusable = new View(context);
@@ -417,7 +458,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(isFocusable().matches(notFocusable));
   }
 
-  public void testIsSelected() {
+  @Test
+  public void isSelectedTest() {
     View selected = new View(context);
     selected.setSelected(true);
     View notSelected = new View(context);
@@ -426,14 +468,16 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(isSelected().matches(notSelected));
   }
 
-  public void testWithTextResourceId() {
+  @Test
+  public void withTextResourceIdTest() {
     TextView textView = new TextView(context);
     textView.setText(R.string.something);
     assertTrue(withText(R.string.something).matches(textView));
     assertFalse(withText(R.string.other_string).matches(textView));
   }
 
-  public void testWithTextResourceId_charSequence() {
+  @Test
+  public void withTextResourceId_charSequenceTest() {
     TextView textView = new TextView(context);
     String expectedText = context
         .getResources().getString(R.string.something);
@@ -444,7 +488,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withText(R.string.other_string).matches(textView));
   }
 
-  public void testWithHintString() {
+  @Test
+  public void withHintStringTest() {
     TextView textView = new TextView(context);
     textView.setHint(null);
     assertFalse(withHint(is("")).matches(textView));
@@ -454,7 +499,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withHint(is("blah")).matches(textView));
   }
 
-  public void testWithHintResourceId() {
+  @Test
+  public void withHintResourceIdTest() {
     TextView textView = new TextView(context);
     textView.setHint(R.string.something);
     assertTrue(withHint(R.string.something).matches(textView));
@@ -463,8 +509,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withHint(R.string.other_string + 100).matches(textView));
   }
 
-
-  public void testWithHintResourceId_charSequence() {
+  @Test
+  public void withHintResourceId_charSequenceTest() {
     TextView textView = new TextView(context);
     String expectedText = context
         .getResources().getString(R.string.something);
@@ -475,7 +521,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withHint(R.string.other_string).matches(textView));
   }
 
-  public void testWithParent() {
+  @Test
+  public void withParentTest() {
     View view1 = new TextView(context);
     View view2 = new TextView(context);
     View view3 = new TextView(context);
@@ -497,7 +544,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withParent(is(view3)).matches(view3));
   }
 
-  public void testWithChild() {
+  @Test
+  public void withChildTest() {
     View view1 = new TextView(context);
     View view2 = new TextView(context);
     View view3 = new TextView(context);
@@ -518,7 +566,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withChild(is(view3)).matches(view3));
   }
 
-  public void testIsRootView() {
+  @Test
+  public void isRootViewTest() {
     ViewGroup rootView = new ViewGroup(context) {
       @Override
       protected void onLayout(boolean changed, int l, int t, int r, int b) {
@@ -532,7 +581,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(isRoot().matches(view));
   }
 
-  public void testHasSibling() {
+  @Test
+  public void hasSiblingTest() {
     TextView v1 = new TextView(context);
     v1.setText("Bill Odama");
     Button v2 = new Button(context);
@@ -545,7 +595,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(hasSibling(is(v3)).matches(parent));
   }
 
-  public void testHasImeAction() {
+  @Test
+  public void hasImeActionTest() {
     EditText editText = new EditText(context);
     assertFalse(hasImeAction(EditorInfo.IME_ACTION_GO).matches(editText));
     editText.setImeOptions(EditorInfo.IME_ACTION_NEXT);
@@ -553,19 +604,22 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertTrue(hasImeAction(EditorInfo.IME_ACTION_NEXT).matches(editText));
   }
 
-  public void testHasImeActionNoInputConnection() {
+  @Test
+  public void hasImeActionNoInputConnection() {
     Button button = new Button(context);
     assertFalse(hasImeAction(0).matches(button));
   }
 
-  public void testSupportsInputMethods() {
+  @Test
+  public void supportsInputMethodsTest() {
     Button button = new Button(context);
     EditText editText = new EditText(context);
     assertFalse(supportsInputMethods().matches(button));
     assertTrue(supportsInputMethods().matches(editText));
   }
 
-  public void testHasLinks() {
+  @Test
+  public void hasLinksTest() {
     TextView viewWithLinks = new TextView(context);
     viewWithLinks.setText("Here is a www.google.com link");
     Linkify.addLinks(viewWithLinks, Linkify.ALL);
@@ -577,7 +631,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
   }
 
   @UiThreadTest
-  public void testWithSpinnerTextResourceId() {
+  @Test
+  public void withSpinnerTextResourceId() {
     Spinner spinner = new Spinner(this.context);
     List<String> values = Lists.newArrayList();
     values.add(this.context.getString(R.string.something));
@@ -593,7 +648,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
   }
 
   @UiThreadTest
-  public void testWithSpinnerTextString() {
+  @Test
+  public void withSpinnerTextString() {
     Spinner spinner = new Spinner(this.context);
     List<String> values = Lists.newArrayList();
     values.add("Hello World");
@@ -610,7 +666,8 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     assertFalse(withSpinnerText(is("")).matches(spinner));
   }
 
-  public void testWithSpinnerTextNull() {
+  @Test
+  public void withSpinnerTextNull() {
     try {
       withSpinnerText((Matcher<String>) null);
       fail("Should of thrown NPE");
@@ -619,19 +676,22 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     }
   }
 
-  public void testHasErrorTextReturnsTrue_WithCorrectErrorString() {
+  @Test
+  public void hasErrorTextReturnsTrue_WithCorrectErrorString() {
     EditText editText = new EditText(context);
     editText.setError("TEST");
     assertTrue(hasErrorText("TEST").matches(editText));
   }
 
-  public void testHasErrorTextReturnsFalse_WithDifferentErrorString() {
+  @Test
+  public void hasErrorTextReturnsFalse_WithDifferentErrorString() {
     EditText editText = new EditText(context);
     editText.setError("TEST");
     assertFalse(hasErrorText("TEST1").matches(editText));
   }
 
-  public void testHasErrorTextShouldFail_WithNullString() {
+  @Test
+  public void hasErrorTextShouldFail_WithNullString() {
     try {
       hasErrorText((Matcher<String>) null);
       fail("Should of thrown NPE");
@@ -640,26 +700,30 @@ public class ViewMatchersTest extends InstrumentationTestCase {
     }
   }
 
-  public void testHasBackground() {
+  @Test
+  public void hasBackgroundTest() {
     View viewWithBackground = new View(context);
     viewWithBackground.setBackground(context.getDrawable(R.drawable.drawable_1));
 
     assertTrue(hasBackground(R.drawable.drawable_1).matches(viewWithBackground));
   }
 
-  public void testWithInputType_ReturnsTrueIf_CorrectInput() {
+  @Test
+  public void withInputType_ReturnsTrueIf_CorrectInput() {
     EditText editText = new EditText(context);
     editText.setInputType(InputType.TYPE_CLASS_NUMBER);
     assertTrue(withInputType(InputType.TYPE_CLASS_NUMBER).matches(editText));
   }
 
-  public void testWithInputType_ReturnsFalseIf_IncorrectInput() {
+  @Test
+  public void withInputType_ReturnsFalseIf_IncorrectInput() {
     EditText editText = new EditText(context);
     editText.setInputType(InputType.TYPE_CLASS_NUMBER);
     assertFalse(withInputType(InputType.TYPE_CLASS_TEXT).matches(editText));
   }
 
-  public void testWithInputType_ShouldNotCrashIf_InputTypeIsNotRecognized() {
+  @Test
+  public void withInputType_ShouldNotCrashIf_InputTypeIsNotRecognized() {
     EditText editText = new EditText(context);
     editText.setInputType(InputType.TYPE_CLASS_NUMBER);
     assertFalse(withInputType(UNRECOGNIZED_INPUT_TYPE).matches(editText));

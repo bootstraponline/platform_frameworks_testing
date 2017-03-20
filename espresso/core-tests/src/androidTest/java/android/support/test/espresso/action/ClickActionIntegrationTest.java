@@ -16,38 +16,34 @@
 
 package android.support.test.espresso.action;
 
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.LargeViewActivity;
+import android.support.test.testapp.R;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
-import android.support.test.testapp.LargeViewActivity;
-import android.support.test.testapp.R;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
-
 /**
  * Tests for {@link GeneralClickAction} on a large view.
  */
 @LargeTest
-public class ClickActionIntegrationTest
-extends ActivityInstrumentationTestCase2<LargeViewActivity> {
-  @SuppressWarnings("deprecation")
-  public ClickActionIntegrationTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", LargeViewActivity.class);
-  }
+@RunWith(AndroidJUnit4.class)
+public class ClickActionIntegrationTest {
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    // Espresso will not launch our activity for us, we must launch it via getActivity().
-    getActivity();
-  }
+  @Rule
+  public ActivityTestRule<LargeViewActivity> rule = new ActivityTestRule<>(LargeViewActivity.class);
 
-  public void testClick() {
+  @Test
+  public void clickActionTesting() {
     onView(withId(R.id.large_view)).check(matches(withText("large view")));
     onView(withId(R.id.large_view)).perform(click());
     onView(withId(R.id.large_view)).check(matches(withText("Ouch!!!")));

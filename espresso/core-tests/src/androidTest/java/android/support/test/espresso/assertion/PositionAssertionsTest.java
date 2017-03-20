@@ -16,64 +16,74 @@
 
 package android.support.test.espresso.assertion;
 
-import static android.support.test.espresso.assertion.PositionAssertions.findView;
-import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
-
+import android.content.Context;
 import android.support.test.espresso.AmbiguousViewMatcherException;
 import android.support.test.espresso.NoMatchingViewException;
-
-import android.test.InstrumentationTestCase;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.MediumTest;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
+import static android.support.test.InstrumentationRegistry.getTargetContext;
+import static android.support.test.espresso.assertion.PositionAssertions.findView;
+import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.rules.ExpectedException.none;
+
 /**
  * Test case for {@link PositionAssertions} focusing on failure cases.
  * Please check {@link PositionAssertionsUnitTest} for more unit tests related
  * to getLocationOnScreen.
  */
-public class PositionAssertionsTest extends InstrumentationTestCase {
+@MediumTest
+@RunWith(AndroidJUnit4.class)
+public class PositionAssertionsTest {
+
+  @Rule
+  public ExpectedException expectedException = none();
 
   private final String text1 = "text1";
   private final String text2 = "text2";
 
-  public void testFindView_Exists() {
+  @Test
+  public void findView_Exists() {
     View root = setUpViewHierarchy();
     View foundView = findView(withText(text1), root);
     assertNotNull(foundView);
   }
 
-  public void testFindView_NotFound() {
+  @Test
+  public void findView_NotFound() {
     View root = setUpViewHierarchy();
-    try {
-      findView(withText("does not exist"), root);
-    } catch (NoMatchingViewException expected) {
-      return;
-    }
-    fail("NoMatchingViewException is expected.");
+    expectedException.expect(NoMatchingViewException.class);
+    findView(withText("does not exist"), root);
   }
 
-  public void testFindView_Ambiguous() {
+  @Test
+  public void findView_Ambiguous() {
     View root = setUpViewHierarchy();
-    try {
-      findView(isAssignableFrom(TextView.class), root);
-    } catch (AmbiguousViewMatcherException expected) {
-      return;
-    }
-    fail("AmbiguousViewMatcherException is expected.");
+    expectedException.expect(AmbiguousViewMatcherException.class);
+    findView(isAssignableFrom(TextView.class), root);
   }
 
   private View setUpViewHierarchy() {
-    TextView v1 = new TextView(getInstrumentation().getTargetContext());
+    Context targetContext = getTargetContext();
+    TextView v1 = new TextView(targetContext);
     v1.setText(text1);
-    TextView v2 = new TextView(getInstrumentation().getTargetContext());
+    TextView v2 = new TextView(targetContext);
     v2.setText(text2);
     v2.setContentDescription("content description");
-    ViewGroup parent = new RelativeLayout(getInstrumentation().getTargetContext());
-    View grany = new ScrollView(getInstrumentation().getTargetContext());
+    ViewGroup parent = new RelativeLayout(targetContext);
+    View grany = new ScrollView(targetContext);
     ((ViewGroup) grany).addView(parent);
     parent.addView(v1);
     parent.addView(v2);

@@ -16,49 +16,51 @@
 
 package android.support.test.espresso;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-
-import android.support.test.testapp.R;
-import android.support.test.testapp.SyncActivity;
-
 import android.os.Handler;
 import android.os.Looper;
-import android.test.ActivityInstrumentationTestCase2;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.R;
+import android.support.test.testapp.SyncActivity;
 import android.test.suitebuilder.annotation.LargeTest;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static org.junit.Assert.fail;
+
 /**
  * Test case for {@link AppNotIdleException}.
  */
 @LargeTest
-public class AppNotIdleExceptionTest extends ActivityInstrumentationTestCase2<SyncActivity> {
+@RunWith(AndroidJUnit4.class)
+public class AppNotIdleExceptionTest {
 
-  @SuppressWarnings("deprecation")
-  public AppNotIdleExceptionTest() {
-    // This constructor was deprecated - but we want to support lower API levels.
-    super("android.support.test.testapp", SyncActivity.class);
-  }
+  @Rule
+  public ActivityTestRule<SyncActivity> rule = new ActivityTestRule<>(SyncActivity.class);
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
     IdlingPolicies.setMasterPolicyTimeout(5, TimeUnit.SECONDS);
   }
 
+  @After
   public void tearDown() throws Exception {
     IdlingPolicies.setMasterPolicyTimeout(60, TimeUnit.SECONDS);
-    super.tearDown();
   }
 
-
-
-  public void testAppIdleException() throws Exception {
+  @Test
+  public void appIdleException() throws Exception {
     final AtomicBoolean continueBeingBusy = new AtomicBoolean(true);
     try {
       final Handler handler = new Handler(Looper.getMainLooper());

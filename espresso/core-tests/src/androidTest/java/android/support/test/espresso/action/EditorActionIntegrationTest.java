@@ -16,6 +16,20 @@
 
 package android.support.test.espresso.action;
 
+import android.support.test.espresso.PerformException;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.R;
+import android.support.test.testapp.SendActivity;
+import android.test.suitebuilder.annotation.LargeTest;
+import android.view.inputmethod.EditorInfo;
+
+import org.hamcrest.CustomTypeSafeMatcher;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.pressImeActionButton;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
@@ -26,35 +40,23 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
-
-import android.support.test.espresso.PerformException;
-import android.support.test.testapp.R;
-import android.support.test.testapp.SendActivity;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
-import android.test.suitebuilder.annotation.Suppress;
-import android.view.inputmethod.EditorInfo;
+import static org.junit.rules.ExpectedException.none;
 
 /**
  * Tests for {@link EditorAction}.
  */
 @LargeTest
-public class EditorActionIntegrationTest extends ActivityInstrumentationTestCase2<SendActivity> {
-  @SuppressWarnings("deprecation")
-  public EditorActionIntegrationTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", SendActivity.class);
-  }
+@RunWith(AndroidJUnit4.class)
+public class EditorActionIntegrationTest {
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
-  }
+  @Rule
+  public ActivityTestRule<SendActivity> rule = new ActivityTestRule<>(SendActivity.class);
 
-  @SuppressWarnings("unchecked")
-  public void testPressImeActionButtonOnSearchBox() {
+  @Rule
+  public ExpectedException expectedException = none();
+
+  @Test
+  public void pressImeActionButtonOnSearchBox() {
     String searchFor = "rainbows and unicorns";
     onView(withId(R.id.search_box)).perform(scrollTo(), ViewActions.typeText(searchFor));
     onView(withId(R.id.search_box))
@@ -65,21 +67,21 @@ public class EditorActionIntegrationTest extends ActivityInstrumentationTestCase
         .check(matches(allOf(isDisplayed(), withText(containsString(searchFor)))));
   }
 
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
-  public void testPressImeActionButtonOnNonEditorWidget() {
-    try {
-      onView(withId(R.id.send_button)).perform(pressImeActionButton());
-      fail("Expected exception on previous call");
-    } catch (PerformException expected) {
-      assertTrue(expected.getCause() instanceof IllegalStateException);
-    }
+  @Test
+  public void pressImeActionButtonOnNonEditorWidget() {
+    expectedException.expect(PerformException.class);
+    expectedException.expectCause(new CustomTypeSafeMatcher<Throwable>(
+        "instance of IllegalStateException") {
+      @Override
+      protected boolean matchesSafely(Throwable throwable) {
+        return throwable instanceof IllegalStateException;
+      }
+    });
+    onView(withId(R.id.send_button)).perform(pressImeActionButton());
   }
 
-  public void testPressSearchOnDefaultEditText() {
+  @Test
+  public void pressSearchOnDefaultEditText() {
     onView(withId(R.id.enter_data_edit_text)).perform(pressImeActionButton());
   }
 }

@@ -16,6 +16,7 @@
 
 package android.support.test.espresso;
 
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -30,9 +31,15 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.hasValue;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.rules.ExpectedException.none;
 
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.base.DefaultFailureHandler;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.support.test.testapp.ActionBarTestActivity;
 import android.support.test.testapp.KeyboardTestActivity;
 import android.support.test.testapp.MainActivity;
@@ -46,6 +53,11 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import org.hamcrest.Matcher;
+import org.junit.After;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -55,27 +67,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * closeSoftKeyboard.
  */
 @LargeTest
-public class EspressoTest extends ActivityInstrumentationTestCase2<MainActivity> {
-  @SuppressWarnings("deprecation")
-  public EspressoTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", MainActivity.class);
-  }
+@RunWith(AndroidJUnit4.class)
+public class EspressoTest {
+  @Rule
+  public ActivityTestRule<MainActivity> rule = new ActivityTestRule<>(MainActivity.class);
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
-  }
+  @Rule
+  public ExpectedException expectedException = none();
 
-  @Override
+
+  @After
   public void tearDown() throws Exception {
-    super.tearDown();
     Espresso.setFailureHandler(new DefaultFailureHandler(getTargetContext()));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testOpenOverflowFromActionBar() {
+  @Test
+  public void openOverflowFromActionBar() {
     onData(allOf(instanceOf(Map.class), hasValue(ActionBarTestActivity.class.getSimpleName())))
         .perform(click());
     onView(withId(R.id.hide_contextual_action_bar))
@@ -87,8 +94,8 @@ public class EspressoTest extends ActivityInstrumentationTestCase2<MainActivity>
         .check(matches(withText("World")));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testOpenOverflowInActionMode() {
+  @Test
+  public void openOverflowInActionMode() {
     onData(allOf(instanceOf(Map.class), hasValue(ActionBarTestActivity.class.getSimpleName())))
         .perform(click());
     openContextualActionModeOverflowMenu();
@@ -98,8 +105,8 @@ public class EspressoTest extends ActivityInstrumentationTestCase2<MainActivity>
         .check(matches(withText("Key")));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testCloseSoftKeyboard() {
+  @Test
+  public void closeSoftKeyboard() {
     onData(allOf(instanceOf(Map.class), hasValue(SendActivity.class.getSimpleName())))
         .perform(click());
 
@@ -133,7 +140,8 @@ public class EspressoTest extends ActivityInstrumentationTestCase2<MainActivity>
    * for this test to be useful, hardware keyboard must be disabled. Thus, soft keyboard
    * must be present.
    */
-  public void testCloseSoftKeyboardRetry() {
+  @Test
+  public void closeSoftKeyboardRetry() {
     onData(allOf(instanceOf(Map.class), hasValue(KeyboardTestActivity.class.getSimpleName())))
         .perform(click());
     // click on the edit text which bring the soft keyboard up
@@ -148,7 +156,8 @@ public class EspressoTest extends ActivityInstrumentationTestCase2<MainActivity>
     onView(withId(R.id.changeTextBt)).perform(click());
   }
 
-  public void testSetFailureHandler() {
+  @Test
+  public void setFailureHandler() {
     final AtomicBoolean handled = new AtomicBoolean(false);
     Espresso.setFailureHandler(new FailureHandler() {
       @Override
@@ -160,14 +169,14 @@ public class EspressoTest extends ActivityInstrumentationTestCase2<MainActivity>
     assertTrue(handled.get());
   }
 
-  public void testRegisterResourceWithNullName() {
-    try {
-      Espresso.registerIdlingResources(new DummyIdlingResource(null));
-      fail("Should have thrown NPE");
-    } catch (RuntimeException expected) {}
+  @Test
+  public void registerResourceWithNullName() {
+    expectedException.expect(RuntimeException.class);
+    Espresso.registerIdlingResources(new DummyIdlingResource(null));
   }
 
-  public void testGetIdlingResources() {
+  @Test
+  public void getIdlingResources() {
     int originalCount = Espresso.getIdlingResources().size();
 
     IdlingResource resource = new DummyIdlingResource("testGetIdlingResources");
@@ -179,13 +188,15 @@ public class EspressoTest extends ActivityInstrumentationTestCase2<MainActivity>
     assertEquals(originalCount, Espresso.getIdlingResources().size());
   }
 
-  public void testRegisterIdlingResources() {
+  @Test
+  public void registerIdlingResources() {
     IdlingResource resource = new DummyIdlingResource("testRegisterIdlingResources");
     assertTrue(Espresso.registerIdlingResources(resource));
     assertFalse(Espresso.registerIdlingResources(resource));
   }
 
-  public void testUnregisterIdlingResources() {
+  @Test
+  public void unregisterIdlingResources() {
     IdlingResource resource = new DummyIdlingResource("testUnregisterIdlingResources");
     Espresso.registerIdlingResources(resource);
     assertTrue(Espresso.unregisterIdlingResources(resource));

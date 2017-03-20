@@ -16,93 +16,80 @@
 
 package android.support.test.espresso.base;
 
+import android.support.annotation.NonNull;
+import android.support.test.espresso.AmbiguousViewMatcherException;
+import android.support.test.espresso.NoMatchingViewException;
+import android.support.test.espresso.ViewAssertion;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.MainActivity;
+import android.test.suitebuilder.annotation.LargeTest;
+import android.view.View;
+
+import junit.framework.AssertionFailedError;
+
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.CustomTypeSafeMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
 import static com.google.common.base.Throwables.getStackTraceAsString;
 import static org.hamcrest.Matchers.not;
-
-import android.support.test.espresso.AmbiguousViewMatcherException;
-import android.support.test.espresso.NoMatchingViewException;
-import android.support.test.espresso.ViewAssertion;
-import android.support.test.testapp.MainActivity;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.Suppress;
-import android.view.View;
-
-import junit.framework.AssertionFailedError;
-
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
+import static org.junit.Assert.assertFalse;
+import static org.junit.rules.ExpectedException.none;
 
 /**
  * Tests Espresso's default failure handling.
  */
-public class DefaultFailureHandlerTest extends ActivityInstrumentationTestCase2<MainActivity> {
+@LargeTest
+@RunWith(AndroidJUnit4.class)
+public class DefaultFailureHandlerTest {
 
-  @SuppressWarnings("deprecation")
-  public DefaultFailureHandlerTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", MainActivity.class);
+  @Rule
+  public ActivityTestRule<MainActivity> rule = new ActivityTestRule<>(MainActivity.class);
+
+  @Rule
+  public ExpectedException expectedException = none();
+
+  @Test
+  public void mismatchInCheck() {
+    expectedException.expect(AssertionFailedError.class);
+    expectedException.expect(stackTraceContainsThisClass());
+    onView(isRoot()).check(matches(not(isDisplayed())));
   }
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
+  @Test
+  public void customAssertionError() {
+    expectedException.expect(AssertionFailedError.class);
+    expectedException.expectCause(stackTraceContainsThisClass());
+    onView(isRoot()).check(new ViewAssertion() {
+      @Override
+      public void check(View view, NoMatchingViewException noViewFoundException) {
+        assertFalse(true);
+      }
+    });
   }
 
-  public void testMismatchInCheck() {
-    try {
-      onView(isRoot()).check(matches(not(isDisplayed())));
-      fail("Previous call expected to fail");
-    } catch (AssertionFailedError e) {
-      assertFailureStackContainsThisClass(e);
-    }
+  @Test
+  public void noMatchingViewException() {
+    expectedException.expect(NoMatchingViewException.class);
+    expectedException.expect(stackTraceContainsThisClass());
+    onView(withMatchesThatReturns(false)).check(matches(not(isDisplayed())));
   }
 
-  public void testCustomAssertionError() {
-    try {
-      onView(isRoot()).check(new ViewAssertion() {
-        @Override
-        public void check(View view, NoMatchingViewException noViewFoundException) {
-          assertFalse(true);
-        }
-      });
-      fail("Previous call expected to fail");
-    } catch (AssertionFailedError e) {
-      assertFailureStackContainsThisClass(e);
-    }
-  }
-
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
-  public void testNoMatchingViewException() {
-    try {
-      onView(withMatchesThatReturns(false)).check(matches(not(isDisplayed())));
-      fail("Previous call expected to fail");
-    } catch (NoMatchingViewException e) {
-      assertFailureStackContainsThisClass(e);
-    }
-  }
-
-  public void testAmbiguousViewMatcherException() {
-    try {
-      onView(withMatchesThatReturns(true)).check(matches(isDisplayed()));
-    } catch (RuntimeException e) {
-      assertTrue(e instanceof AmbiguousViewMatcherException);
-      assertFailureStackContainsThisClass(e);
-    }
-  }
-
-  private void assertFailureStackContainsThisClass(Throwable e) {
-    assertTrue(getStackTraceAsString(e).contains(getClass().getSimpleName().toString()));
+  @Test
+  public void ambiguousViewMatcherException() {
+    expectedException.expect(AmbiguousViewMatcherException.class);
+    expectedException.expect(stackTraceContainsThisClass());
+    onView(withMatchesThatReturns(true)).check(matches(isDisplayed()));
   }
 
   private static Matcher<View> withMatchesThatReturns(final boolean returnValue) {
@@ -119,4 +106,14 @@ public class DefaultFailureHandlerTest extends ActivityInstrumentationTestCase2<
     };
   }
 
+  @NonNull
+  private CustomTypeSafeMatcher<Throwable> stackTraceContainsThisClass() {
+    return new CustomTypeSafeMatcher<Throwable>("Stack Contains This Class") {
+      @Override
+      protected boolean matchesSafely(Throwable e) {
+        return getStackTraceAsString(e).contains(
+            DefaultFailureHandlerTest.class.getSimpleName().toString());
+      }
+    };
+  }
 }

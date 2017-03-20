@@ -23,7 +23,10 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.junit.Assert.fail;
 
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.support.test.testapp.R;
 import android.support.test.testapp.SendActivity;
 
@@ -36,6 +39,11 @@ import android.test.suitebuilder.annotation.LargeTest;
 import android.view.View;
 
 import org.hamcrest.Matcher;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
@@ -46,12 +54,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Collection of some nasty edge cases.
  */
 @LargeTest
-public class EspressoEdgeCaseTest extends ActivityInstrumentationTestCase2<SendActivity> {
-  @SuppressWarnings("deprecation")
-  public EspressoEdgeCaseTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", SendActivity.class);
-  }
+@RunWith(AndroidJUnit4.class)
+public class EspressoEdgeCaseTest {
+  @Rule
+  public ActivityTestRule<SendActivity> rule = new ActivityTestRule<>(SendActivity.class);
 
   private static final Callable<Void> NO_OP = new Callable<Void>() {
     @Override
@@ -63,23 +69,20 @@ public class EspressoEdgeCaseTest extends ActivityInstrumentationTestCase2<SendA
   private Handler mainHandler;
   private final OneShotResource oneShotResource = new OneShotResource();
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
     mainHandler = new Handler(Looper.getMainLooper());
   }
 
-  @Override
+  @After
   public void tearDown() throws Exception {
     IdlingPolicies.setMasterPolicyTimeout(60, TimeUnit.SECONDS);
     IdlingPolicies.setIdlingResourceTimeout(26, TimeUnit.SECONDS);
     oneShotResource.setIdle(true);
-    super.tearDown();
   }
 
-  @SuppressWarnings("unchecked")
-  public void testRecoveryFromExceptionOnMainThreadLoopMainThreadUntilIdle() throws Exception {
+  @Test
+  public void recoveryFromExceptionOnMainThreadLoopMainThreadUntilIdle() throws Exception {
     final RuntimeException poison = new RuntimeException("oops");
     try {
       onView(withId(R.id.enter_data_edit_text))
@@ -112,8 +115,8 @@ public class EspressoEdgeCaseTest extends ActivityInstrumentationTestCase2<SendA
         .check(matches(withText("Hello World111")));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testRecoveryFromExceptionOnMainThreadLoopMainThreadForAtLeast() throws Exception {
+  @Test
+  public void recoveryFromExceptionOnMainThreadLoopMainThreadForAtLeast() throws Exception {
     final RuntimeException poison = new RuntimeException("oops");
     final FutureTask<Void> syncTask = new FutureTask<Void>(NO_OP);
     try {
@@ -151,8 +154,8 @@ public class EspressoEdgeCaseTest extends ActivityInstrumentationTestCase2<SendA
         .check(matches(withText("baz bar")));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testRecoveryFromTimeOutExceptionMaster() throws Exception {
+  @Test
+  public void recoveryFromTimeOutExceptionMaster() throws Exception {
     IdlingPolicies.setMasterPolicyTimeout(2, TimeUnit.SECONDS);
     final FutureTask<Void> syncTask = new FutureTask<Void>(NO_OP);
     try {
@@ -191,8 +194,8 @@ public class EspressoEdgeCaseTest extends ActivityInstrumentationTestCase2<SendA
         .check(matches(withText("one two three")));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testRecoveryFromTimeOutExceptionDynamic() {
+  @Test
+  public void recoveryFromTimeOutExceptionDynamic() {
     IdlingPolicies.setIdlingResourceTimeout(2, TimeUnit.SECONDS);
 
     Espresso.registerIdlingResources(oneShotResource);
@@ -219,7 +222,8 @@ public class EspressoEdgeCaseTest extends ActivityInstrumentationTestCase2<SendA
         .check(matches(withText("Doh")));
   }
 
-  public void testRecoveryFromAsyncTaskTimeout() throws Exception {
+  @Test
+  public void recoveryFromAsyncTaskTimeout() throws Exception {
     IdlingPolicies.setMasterPolicyTimeout(2, TimeUnit.SECONDS);
     try {
       onView(withId(R.id.enter_data_edit_text))
@@ -254,9 +258,6 @@ public class EspressoEdgeCaseTest extends ActivityInstrumentationTestCase2<SendA
     onView(withId(R.id.enter_data_edit_text))
         .check(matches(withText("Har Har")));
   }
-
-
-
 
   private abstract static class TestAction implements ViewAction {
     @Override

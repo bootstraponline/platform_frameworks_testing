@@ -16,6 +16,27 @@
 
 package android.support.test.espresso.action;
 
+import android.content.Intent;
+import android.support.test.espresso.NoActivityResumedException;
+import android.support.test.filters.SdkSuppress;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.MainActivity;
+import android.support.test.testapp.R;
+import android.test.FlakyTest;
+import android.test.suitebuilder.annotation.LargeTest;
+import android.view.KeyEvent;
+import android.widget.TextView;
+
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
+import java.util.Map;
+
+import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.pressBack;
@@ -27,59 +48,37 @@ import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasValue;
-
-import android.support.test.filters.SdkSuppress;
-import android.support.test.espresso.NoActivityResumedException;
-import android.support.test.testapp.MainActivity;
-import android.support.test.testapp.R;
-
-import android.content.Intent;
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.FlakyTest;
-import android.test.suitebuilder.annotation.LargeTest;
-import android.test.suitebuilder.annotation.Suppress;
-import android.view.KeyEvent;
-import android.widget.TextView;
-
-import java.util.Map;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.fail;
+import static org.junit.rules.ExpectedException.none;
 
 /**
  * Integration tests for {@link KeyEventAction}.
  */
 @LargeTest
-public class KeyEventActionIntegrationTest extends ActivityInstrumentationTestCase2<MainActivity> {
-  @SuppressWarnings("deprecation")
-  public KeyEventActionIntegrationTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", MainActivity.class);
+@RunWith(AndroidJUnit4.class)
+public class KeyEventActionIntegrationTest {
+
+  @Rule
+  public ActivityTestRule<MainActivity> rule = new ActivityTestRule<>(MainActivity.class,
+      true, false);
+
+  @Rule
+  public ExpectedException expectedException = none();
+
+  @Test
+  public void clickBackOnRootAction() {
+    rule.launchActivity(null);
+    expectedException.expect(NoActivityResumedException.class);
+    pressBack();
   }
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-  }
-
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
-  public void testClickBackOnRootAction() {
-    getActivity();
-    try {
-      pressBack();
-      fail("Should have thrown NoActivityResumedException");
-    } catch (NoActivityResumedException expected) {
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  public void testClickBackOnNonRootActivityLatte() {
-    getActivity();
+  @Test
+  public void clickBackOnNonRootActivityLatte() {
+    rule.launchActivity(null);
     onData(allOf(instanceOf(Map.class), hasValue("LargeViewActivity"))).perform(click());
     pressBack();
 
@@ -88,9 +87,9 @@ public class KeyEventActionIntegrationTest extends ActivityInstrumentationTestCa
         .check(matches(isDisplayed()));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testClickBackOnNonRootActionNoLatte() {
-    getActivity();
+  @Test
+  public void clickBackOnNonRootActionNoLatte() {
+    rule.launchActivity(null);
     onData(allOf(instanceOf(Map.class), hasValue("LargeViewActivity"))).perform(click());
     onView(isRoot()).perform(ViewActions.pressBack());
 
@@ -99,19 +98,16 @@ public class KeyEventActionIntegrationTest extends ActivityInstrumentationTestCa
         .check(matches(isDisplayed()));
   }
 
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
+  @Ignore("Test only passes if run in isolation. Unless Gradle supports a single instrumentation " +
+      "per test this test is ignored")
   @SuppressWarnings("unchecked")
   @SdkSuppress(minSdkVersion=13)
   @FlakyTest
-  public void testClickOnBackFromFragment() {
-    Intent fragmentStack = new Intent().setClassName(getInstrumentation().getTargetContext(),
+  public void clickOnBackFromFragment() {
+    Intent fragmentStack = new Intent().setClassName(getTargetContext(),
         "android.support.test.testapp.FragmentStack");
     fragmentStack.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    getInstrumentation().startActivitySync(fragmentStack);
+    rule.launchActivity(fragmentStack);
     onView(allOf(withParent(withId(R.id.simple_fragment)), isAssignableFrom(TextView.class)))
         .check(matches(withText(containsString("#1"))));
     try {
@@ -119,7 +115,7 @@ public class KeyEventActionIntegrationTest extends ActivityInstrumentationTestCa
       fail("Should have thrown NoActivityResumedException");
     } catch (NoActivityResumedException expected) {
     }
-    getInstrumentation().startActivitySync(fragmentStack);
+    rule.launchActivity(fragmentStack);
 
     onView(withId(R.id.new_fragment)).perform(click()).perform(click()).perform(click());
 
@@ -148,9 +144,9 @@ public class KeyEventActionIntegrationTest extends ActivityInstrumentationTestCa
     }
   }
 
-  @SuppressWarnings("unchecked")
-  public void testPressKeyWithKeyCode() {
-    getActivity();
+  @Test
+  public void pressKeyWithKeyCode() {
+    rule.launchActivity(null);
     onData(allOf(instanceOf(Map.class), hasValue("SendActivity"))).perform(click());
     onView(withId(R.id.enter_data_edit_text)).perform(click());
     onView(withId(R.id.enter_data_edit_text)).perform(ViewActions.pressKey(KeyEvent.KEYCODE_X));

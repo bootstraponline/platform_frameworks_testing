@@ -16,25 +16,37 @@
 
 package android.support.test.espresso.action;
 
+import android.support.annotation.NonNull;
+import android.support.test.espresso.InjectEventSecurityException;
+import android.support.test.espresso.PerformException;
+import android.support.test.espresso.UiController;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
+import android.view.MotionEvent;
+import android.view.View;
+
+import org.hamcrest.CustomTypeSafeMatcher;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.rules.ExpectedException.none;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import android.support.test.espresso.InjectEventSecurityException;
-import android.support.test.espresso.PerformException;
-import android.support.test.espresso.UiController;
-
-import android.view.MotionEvent;
-import android.view.View;
-
-import junit.framework.TestCase;
-
-import org.mockito.Mock;
-
 /**
  * Unit tests for {@link TypeTextAction}.
  */
-public class TypeTextActionTest extends TestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class TypeTextActionTest {
+  @Rule
+  public ExpectedException expectedException = none();
   @Mock
   private UiController mockUiController;
 
@@ -43,13 +55,13 @@ public class TypeTextActionTest extends TestCase {
 
   private TypeTextAction typeTextAction;
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     initMocks(this);
   }
 
-  public void testTypeTextActionPerform() throws InjectEventSecurityException {
+  @Test
+  public void typeTextActionPerform() throws InjectEventSecurityException {
     String stringToBeTyped = "Hello!";
     typeTextAction = new TypeTextAction(stringToBeTyped);
     when(mockUiController.injectMotionEvent(isA(MotionEvent.class))).thenReturn(true);
@@ -57,23 +69,20 @@ public class TypeTextActionTest extends TestCase {
     typeTextAction.perform(mockUiController, mockView);
   }
 
-  public void testTypeTextActionPerformFailed() throws InjectEventSecurityException {
+  @Test
+  public void typeTextActionPerformFailed() throws InjectEventSecurityException {
     String stringToBeTyped = "Hello!";
     typeTextAction = new TypeTextAction(stringToBeTyped);
     when(mockUiController.injectMotionEvent(isA(MotionEvent.class))).thenReturn(true);
     when(mockUiController.injectString(stringToBeTyped)).thenReturn(false);
 
-    try {
-      typeTextAction.perform(mockUiController, mockView);
-      fail("Should have thrown PerformException");
-    } catch (PerformException e) {
-      if (e.getCause() instanceof InjectEventSecurityException) {
-        fail("Exception cause should NOT be of type InjectEventSecurityException");
-      }
-    }
+    expectedException.expect(PerformException.class);
+    expectedException.expectCause(not(instanceOfInjectEventSecurityException()));
+    typeTextAction.perform(mockUiController, mockView);
   }
 
-  public void testTypeTextActionPerformInjectEventSecurityException()
+  @Test
+  public void typeTextActionPerformInjectEventSecurityException()
       throws InjectEventSecurityException {
     String stringToBeTyped = "Hello!";
     typeTextAction = new TypeTextAction(stringToBeTyped);
@@ -81,13 +90,19 @@ public class TypeTextActionTest extends TestCase {
     when(mockUiController.injectString(stringToBeTyped))
         .thenThrow(new InjectEventSecurityException(""));
 
-    try {
-      typeTextAction.perform(mockUiController, mockView);
-      fail("Should have thrown PerformException");
-    } catch (PerformException e) {
-      if (!(e.getCause() instanceof InjectEventSecurityException)) {
-        fail("Exception cause should be of type InjectEventSecurityException");
+    expectedException.expect(PerformException.class);
+    expectedException.expectCause(instanceOfInjectEventSecurityException());
+    typeTextAction.perform(mockUiController, mockView);
+  }
+
+  @NonNull
+  private CustomTypeSafeMatcher<Throwable> instanceOfInjectEventSecurityException() {
+    return new CustomTypeSafeMatcher<Throwable>(
+        "instanceof InjectEventSecurityException") {
+      @Override
+      protected boolean matchesSafely(Throwable throwable) {
+        return throwable instanceof InjectEventSecurityException;
       }
-    }
+    };
   }
 }

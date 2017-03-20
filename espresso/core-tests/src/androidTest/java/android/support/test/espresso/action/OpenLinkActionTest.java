@@ -16,66 +16,63 @@
 
 package android.support.test.espresso.action;
 
+import android.support.test.espresso.PerformException;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.R;
+import android.support.test.testapp.SendActivity;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import org.hamcrest.CustomTypeSafeMatcher;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.openLinkWithText;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-
-import android.support.test.espresso.PerformException;
-import android.support.test.testapp.R;
-import android.support.test.testapp.SendActivity;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
-import android.test.suitebuilder.annotation.Suppress;
+import static org.junit.rules.ExpectedException.none;
 
 /**
  * {@link OpenLinkAction} integration tests.
  */
 @LargeTest
-public class OpenLinkActionTest extends ActivityInstrumentationTestCase2<SendActivity> {
-  @SuppressWarnings("deprecation")
-  public OpenLinkActionTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", SendActivity.class);
+@RunWith(AndroidJUnit4.class)
+public class OpenLinkActionTest {
+
+  @Rule
+  public ActivityTestRule<SendActivity> rule = new ActivityTestRule<>(SendActivity.class);
+
+  @Rule
+  public ExpectedException expectedException = none();
+
+  @Test
+  public void openLink_TargetViewNotSpanned() {
+    expectedException.expect(PerformException.class);
+    expectedException.expectCause(new CustomTypeSafeMatcher<Throwable>(
+        "message contains has-links=false") {
+      @Override
+      protected boolean matchesSafely(Throwable throwable) {
+        return throwable.getMessage().contains("has-links=false");
+      }
+    });
+    onView(withId(R.id.send_title)).perform(scrollTo(), openLinkWithText("altavista.com"));
   }
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    // Espresso will not launch our activity for us, we must launch it via getActivity().
-    getActivity();
-  }
-
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
-  public void testOpenLink_TargetViewNotSpanned() {
-    try {
-      onView(withId(R.id.send_title)).perform(scrollTo(), openLinkWithText("altavista.com"));
-      fail("Expected previous call to fail");
-    } catch (PerformException expected) {
-      assertThat(expected.getCause().getMessage(), containsString("has-links=false"));
-    }
-  }
-
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
+  @Test
   public void testOpenLink_NoLinkFound() {
-    try {
-      onView(withId(R.id.spanned)).perform(scrollTo(), openLinkWithText("bacon"));
-      fail("Expected previous call to fail");
-    } catch (PerformException expected) {
-      assertThat(expected.getCause().getMessage(), containsString("bacon"));
-    }
+    expectedException.expect(PerformException.class);
+    expectedException.expectCause(new CustomTypeSafeMatcher<Throwable>(
+        "message contains has-links=false") {
+      @Override
+      protected boolean matchesSafely(Throwable throwable) {
+        return throwable.getMessage().contains("bacon");
+      }
+    });
+    onView(withId(R.id.spanned)).perform(scrollTo(), openLinkWithText("bacon"));
   }
-
 }

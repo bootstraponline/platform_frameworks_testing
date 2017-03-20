@@ -21,42 +21,51 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 
+import android.support.test.runner.AndroidJUnit4;
 import android.test.AndroidTestCase;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.view.View;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /** Unit tests for {@link NoMatchingViewException}. */
-public class NoMatchingViewExceptionTest extends AndroidTestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class NoMatchingViewExceptionTest {
   private Matcher<View> alwaysFailingMatcher;
 
   @Mock
   private View testView;
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     MockitoAnnotations.initMocks(this);
     alwaysFailingMatcher = nullValue(View.class);
   }
 
-  public void testExceptionContainsMatcherDescription() {
+  @Test
+  public void exceptionContainsMatcherDescription() {
     StringBuilder matcherDescription = new StringBuilder();
     alwaysFailingMatcher.describeTo(new StringDescription(matcherDescription));
     assertThat(createException().getMessage(), containsString(matcherDescription.toString()));
   }
 
-  public void testExceptionContainsView() {
+  @Test
+  public void exceptionContainsView() {
     String exceptionMessage = createException().getMessage();
 
     assertThat("missing root element" + exceptionMessage, exceptionMessage,
         containsString("{id=0,"));
   }
 
-  public void testException_MatcherDescriptionReturnsCorrectValue () {
+  @Test
+  public void exception_MatcherDescriptionReturnsCorrectValue () {
     final NoMatchingViewException noMatchingViewExcpetion = createException();
     final String viewMatcherDescription = noMatchingViewExcpetion.getViewMatcherDescription();
 

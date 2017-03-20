@@ -16,20 +16,30 @@
 
 package android.support.test.espresso.action;
 
+import static android.support.test.InstrumentationRegistry.getContext;
+import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 
+import android.support.test.InstrumentationRegistry;
+import android.support.test.runner.AndroidJUnit4;
 import android.test.AndroidTestCase;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.view.View;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 /**
  * Unit tests for {@link GeneralLocation}.
  */
-public class GeneralLocationTest extends AndroidTestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class GeneralLocationTest {
 
   private static final int VIEW_POSITION_X = 100;
   private static final int VIEW_POSITION_Y = 50;
@@ -41,9 +51,8 @@ public class GeneralLocationTest extends AndroidTestCase {
 
   private View mockView;
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     mockView = spy(new View(getContext()));
     doAnswer(new Answer<Void>() {
       @Override
@@ -62,31 +71,36 @@ public class GeneralLocationTest extends AndroidTestCase {
             VIEW_POSITION_Y + VIEW_HEIGHT);
   }
 
-  public void testLeftLocationsX() {
+  @Test
+  public void leftLocationsX() {
     assertPositionEquals(VIEW_POSITION_X, GeneralLocation.TOP_LEFT, AXIS_X);
     assertPositionEquals(VIEW_POSITION_X, GeneralLocation.CENTER_LEFT, AXIS_X);
     assertPositionEquals(VIEW_POSITION_X, GeneralLocation.BOTTOM_LEFT, AXIS_X);
   }
 
-  public void testRightLocationsX() {
+  @Test
+  public void rightLocationsX() {
     assertPositionEquals(VIEW_POSITION_X + VIEW_WIDTH - 1, GeneralLocation.TOP_RIGHT, AXIS_X);
     assertPositionEquals(VIEW_POSITION_X + VIEW_WIDTH - 1, GeneralLocation.CENTER_RIGHT, AXIS_X);
     assertPositionEquals(VIEW_POSITION_X + VIEW_WIDTH - 1, GeneralLocation.BOTTOM_RIGHT, AXIS_X);
   }
 
-  public void testTopLocationsY() {
+  @Test
+  public void topLocationsY() {
     assertPositionEquals(VIEW_POSITION_Y, GeneralLocation.TOP_LEFT, AXIS_Y);
     assertPositionEquals(VIEW_POSITION_Y, GeneralLocation.TOP_CENTER, AXIS_Y);
     assertPositionEquals(VIEW_POSITION_Y, GeneralLocation.TOP_RIGHT, AXIS_Y);
   }
 
-  public void testBottomLocationsY() {
+  @Test
+  public void bottomLocationsY() {
     assertPositionEquals(VIEW_POSITION_Y + VIEW_HEIGHT - 1, GeneralLocation.BOTTOM_LEFT, AXIS_Y);
     assertPositionEquals(VIEW_POSITION_Y + VIEW_HEIGHT - 1, GeneralLocation.BOTTOM_CENTER, AXIS_Y);
     assertPositionEquals(VIEW_POSITION_Y + VIEW_HEIGHT - 1, GeneralLocation.BOTTOM_RIGHT, AXIS_Y);
   }
 
-  public void testCenterLocationsX() {
+  @Test
+  public void centerLocationsX() {
     assertPositionEquals(VIEW_POSITION_X + (VIEW_WIDTH - 1) / 2.0f,
         GeneralLocation.CENTER, AXIS_X);
     assertPositionEquals(VIEW_POSITION_X + (VIEW_WIDTH - 1) / 2.0f,
@@ -95,7 +109,8 @@ public class GeneralLocationTest extends AndroidTestCase {
         GeneralLocation.BOTTOM_CENTER, AXIS_X);
   }
 
-  public void testCenterLocationsY() {
+  @Test
+  public void centerLocationsY() {
     assertPositionEquals(VIEW_POSITION_Y + (VIEW_HEIGHT - 1) / 2.0f,
         GeneralLocation.CENTER, AXIS_Y);
     assertPositionEquals(VIEW_POSITION_Y + (VIEW_HEIGHT - 1) / 2.0f,

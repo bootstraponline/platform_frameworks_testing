@@ -16,16 +16,19 @@
 
 package android.support.test.espresso.base;
 
-import android.support.test.espresso.IdlingResource;
-import android.support.test.espresso.base.IdlingResourceRegistry.IdleNotificationCallback;
-import com.google.common.collect.Lists;
-
-
 import android.os.Handler;
 import android.os.Looper;
-import android.test.InstrumentationTestCase;
+import android.support.test.espresso.IdlingResource;
+import android.support.test.espresso.base.IdlingResourceRegistry.IdleNotificationCallback;
+import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.util.Log;
+
+import com.google.common.collect.Lists;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -34,22 +37,29 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 /**
  * Unit tests for {@link IdlingResourceRegistry}.
  */
-public class IdlingResourceRegistryTest extends InstrumentationTestCase {
+@LargeTest
+@RunWith(AndroidJUnit4.class)
+public class IdlingResourceRegistryTest {
 
   private IdlingResourceRegistry registry;
   private Handler handler;
 
-  @Override
+  @Before
   public void setUp() throws Exception {
     Looper looper = Looper.getMainLooper();
     handler = new Handler(looper);
     registry = new IdlingResourceRegistry(looper);
   }
 
-  public void testRegisterDuplicates() {
+  @Test
+  public void registerDuplicates() {
     IdlingResource r1 = new OnDemandIdlingResource("r1");
     IdlingResource r1dup = new OnDemandIdlingResource("r1");
     registry.registerResources(Lists.newArrayList(r1));
@@ -57,7 +67,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     registry.registerResources(Lists.newArrayList(r1dup));
   }
 
-  public void testUnregisterNeverRegistered() throws Exception {
+  @Test
+  public void unregisterNeverRegistered() throws Exception {
     IdlingResource r1 = new OnDemandIdlingResource("r1");
     IdlingResource r2 = new OnDemandIdlingResource("r2");
 
@@ -71,7 +82,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     assertFalse(resourcesIdle.get());
   }
 
-  public void testUnregisteredResourceIsDisconnected() throws Exception {
+  @Test
+  public void unregisteredResourceIsDisconnected() throws Exception {
     // This repros a bug where a resource which has been registered and then
     // unregistered could still send an onTransitionToIdle() message back to
     // the IRR and corrupt it's internal data structures.
@@ -109,7 +121,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     assertTrue(resourcesIdle.get());
   }
 
-  public void testRegisterAndUnregisterIdling() throws Exception {
+  @Test
+  public void registerAndUnregisterIdling() throws Exception {
     OnDemandIdlingResource r1 = new OnDemandIdlingResource("r1");
     r1.forceIdleNow();
 
@@ -127,7 +140,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     assertTrue(resourcesIdle.get());
   }
 
-  public void testRegisterAndUnregisterNeverIdling() throws Exception {
+  @Test
+  public void registerAndUnregisterNeverIdling() throws Exception {
     IdlingResource r1 = new OnDemandIdlingResource("r1");
     registry.registerResources(Lists.newArrayList(r1));
 
@@ -142,7 +156,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     assertTrue(resourcesIdle.get());
   }
 
-  public void testRegisterAndUnregisterReturnValue() {
+  @Test
+  public void registerAndUnregisterReturnValue() {
     IdlingResource r1 = new OnDemandIdlingResource("r1");
     IdlingResource r2 = new OnDemandIdlingResource("r2");
 
@@ -163,7 +178,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     assertFalse(registry.unregisterResources(Lists.newArrayList(r3, r3)));
   }
 
-  public void testGetResources() {
+  @Test
+  public void getResources() {
     IdlingResource r1 = new OnDemandIdlingResource("r1");
     IdlingResource r2 = new OnDemandIdlingResource("r2");
 
@@ -176,7 +192,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     assertEquals(registry.getResources().size(), 0);
   }
 
-  public void testAllResourcesAreIdle() throws Exception {
+  @Test
+  public void allResourcesAreIdle() throws Exception {
     OnDemandIdlingResource r1 = new OnDemandIdlingResource("r1");
     OnDemandIdlingResource r2 = new OnDemandIdlingResource("r2");
     IdlingResource r3 = new OnDemandIdlingResource("r3");
@@ -194,8 +211,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     assertFalse(resourcesIdle.get());
   }
 
-  @LargeTest
-  public void testAllResourcesAreIdle_RepeatingToIdleTransitions() throws Exception {
+  @Test
+  public void allResourcesAreIdle_RepeatingToIdleTransitions() throws Exception {
     OnDemandIdlingResource r1 = new OnDemandIdlingResource("r1");
     registry.registerResources(Lists.newArrayList(r1));
     for (int i = 1; i <= 3; i++) {
@@ -213,8 +230,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     }
   }
 
-  @LargeTest
-  public void testNotifyWhenAllResourcesAreIdle_success() throws InterruptedException {
+  @Test
+  public void notifyWhenAllResourcesAreIdle_success() throws InterruptedException {
     final CountDownLatch busyWarningLatch = new CountDownLatch(4);
     final CountDownLatch timeoutLatch = new CountDownLatch(1);
     final CountDownLatch allResourcesIdleLatch = new CountDownLatch(1);
@@ -269,8 +286,8 @@ public class IdlingResourceRegistryTest extends InstrumentationTestCase {
     assertEquals(1, timeoutLatch.getCount());
   }
 
-  @LargeTest
-  public void testNotifyWhenAllResourcesAreIdle_timeout() throws InterruptedException {
+  @Test
+  public void notifyWhenAllResourcesAreIdle_timeout() throws InterruptedException {
     final CountDownLatch busyWarningLatch = new CountDownLatch(5);
     final CountDownLatch timeoutLatch = new CountDownLatch(1);
     final CountDownLatch allResourcesIdleLatch = new CountDownLatch(1);

@@ -16,6 +16,25 @@
 
 package android.support.test.espresso.matcher;
 
+import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.database.MergeCursor;
+import android.os.Build;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
+import android.util.Log;
+
+import org.hamcrest.Matcher;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import static android.support.test.espresso.matcher.CursorMatchers.withRowBlob;
 import static android.support.test.espresso.matcher.CursorMatchers.withRowDouble;
 import static android.support.test.espresso.matcher.CursorMatchers.withRowFloat;
@@ -23,24 +42,16 @@ import static android.support.test.espresso.matcher.CursorMatchers.withRowInt;
 import static android.support.test.espresso.matcher.CursorMatchers.withRowLong;
 import static android.support.test.espresso.matcher.CursorMatchers.withRowShort;
 import static android.support.test.espresso.matcher.CursorMatchers.withRowString;
+import static junit.framework.TestCase.assertFalse;
 import static org.hamcrest.Matchers.is;
-
-import android.database.Cursor;
-import android.database.MatrixCursor;
-import android.database.MergeCursor;
-import android.os.Build;
-import android.test.suitebuilder.annotation.SmallTest;
-import android.util.Log;
-
-import junit.framework.TestCase;
-
-import org.hamcrest.Matcher;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.rules.ExpectedException.none;
 
 @SmallTest
-public class CursorMatchersTest extends TestCase {
+@RunWith(AndroidJUnit4.class)
+public class CursorMatchersTest {
 
   private static final int ROW_ID = 0;
 
@@ -85,196 +96,238 @@ public class CursorMatchersTest extends TestCase {
 
   private Cursor cursor;
 
-  @Override
+  @Rule
+  public ExpectedException expectedException = none();
+
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     cursor = makeCursor(COLUMN_NAMES, COLUMN_VALUES);
     cursor.moveToFirst();
   }
 
-  public void testCheckPreconditions() {
+  @Test
+  public void checkPreconditions() {
     assertNotNull(cursor);
   }
 
-  public void testWithRowShort_columnIndexAndValue() {
+  @Test
+  public void withRowShort_columnIndexAndValue() {
     assertTrue(withRowShort(1, SHORT_VALUE).matches(cursor));
   }
 
-  public void testWithRowShort_columnIndexAndValueMatcher() {
+  @Test
+  public void withRowShort_columnIndexAndValueMatcher() {
     assertTrue(withRowShort(1, SHORT_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowShort_columnNameAndValue() {
+  @Test
+  public void withRowShort_columnNameAndValue() {
     assertTrue(withRowShort(COLUMN_SHORT, SHORT_VALUE).matches(cursor));
   }
 
-  public void testWithRowShort_columnNameAndValueMatcher() {
+  @Test
+  public void withRowShort_columnNameAndValueMatcher() {
     assertTrue(withRowShort(COLUMN_SHORT, SHORT_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowShort_columnNameMatcherAndValueMatcher() {
+  @Test
+  public void withRowShort_columnNameMatcherAndValueMatcher() {
     assertTrue(withRowShort(is(COLUMN_SHORT), SHORT_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowShort_ValueDoesNotMatch() {
+  @Test
+  public void withRowShort_ValueDoesNotMatch() {
     assertFalse(withRowShort(COLUMN_SHORT, (short) -1).matches(cursor));
   }
 
-  public void testWithRowInt_columnIndexAndValue() {
+  @Test
+  public void withRowInt_columnIndexAndValue() {
     assertTrue(withRowInt(2, INTEGER_VALUE).matches(cursor));
   }
 
-  public void testWithRowInt_columnIndexAndValueMatcher() {
+  @Test
+  public void withRowInt_columnIndexAndValueMatcher() {
     assertTrue(withRowInt(2, INTEGER_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowInt_columnNameAndValue() {
+  @Test
+  public void withRowInt_columnNameAndValue() {
     assertTrue(withRowInt(COLUMN_INT, INTEGER_VALUE).matches(cursor));
   }
 
-  public void testWithRowInt_columnNameAndValueMatcher() {
+  @Test
+  public void withRowInt_columnNameAndValueMatcher() {
     assertTrue(withRowInt(COLUMN_INT, INTEGER_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowInt_columnNameMatcherAndValueMatcher() {
+  @Test
+  public void withRowInt_columnNameMatcherAndValueMatcher() {
     assertTrue(withRowInt(is(COLUMN_INT), INTEGER_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowInt_ValueDoesNotMatch() {
+  @Test
+  public void withRowInt_ValueDoesNotMatch() {
     assertFalse(withRowInt(COLUMN_INT, -1).matches(cursor));
   }
 
-  public void testWithRowLong_columnIndexAndValue() {
+  @Test
+  public void withRowLong_columnIndexAndValue() {
     assertTrue(withRowLong(3, LONG_VALUE).matches(cursor));
   }
 
-  public void testWithRowLong_columnIndexAndValueMatcher() {
+  @Test
+  public void withRowLong_columnIndexAndValueMatcher() {
     assertTrue(withRowLong(3, LONG_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowLong_columnNameAndValue() {
+  @Test
+  public void withRowLong_columnNameAndValue() {
     assertTrue(withRowLong(COLUMN_LONG, LONG_VALUE).matches(cursor));
   }
 
-  public void testWithRowLong() {
+  @Test
+  public void withRowLongTesting() {
     assertTrue(withRowLong(is(COLUMN_LONG), LONG_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowLong_columnNameMatcherAndValueMatcher() {
+  @Test
+  public void withRowLong_columnNameMatcherAndValueMatcher() {
     assertTrue(withRowLong(COLUMN_LONG, LONG_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowLong_ValueDoesNotMatch() {
+  @Test
+  public void withRowLong_ValueDoesNotMatch() {
     assertFalse(withRowLong(COLUMN_LONG, -1).matches(cursor));
   }
 
-  public void testWithRowFloat_columnIndexAndValue() {
+  @Test
+  public void withRowFloat_columnIndexAndValue() {
     assertTrue(withRowFloat(4, FLOAT_VALUE).matches(cursor));
   }
 
-  public void testWithRowFloat_columnIndexAndValueMatcher() {
+  @Test
+  public void withRowFloat_columnIndexAndValueMatcher() {
     assertTrue(withRowFloat(4, FLOAT_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowFloat_columnNameAndValue() {
+  @Test
+  public void withRowFloat_columnNameAndValue() {
     assertTrue(withRowFloat(COLUMN_FLOAT, FLOAT_VALUE).matches(cursor));
   }
 
-  public void testWithRowFloat_columnNameAndValueMatcher() {
+  @Test
+  public void withRowFloat_columnNameAndValueMatcher() {
     assertTrue(withRowFloat(COLUMN_FLOAT, FLOAT_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowFloat_columnNameMatcherAndValueMatcher() {
+  @Test
+  public void withRowFloat_columnNameMatcherAndValueMatcher() {
     assertTrue(withRowFloat(is(COLUMN_FLOAT), FLOAT_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowFloat_ValueDoesNotMatch() {
+  @Test
+  public void withRowFloat_ValueDoesNotMatch() {
     assertFalse(withRowFloat(COLUMN_FLOAT, -1f).matches(cursor));
   }
 
-  public void testWithRowDouble_columnIndexAndValue() {
+  @Test
+  public void withRowDouble_columnIndexAndValue() {
     assertTrue(withRowDouble(5, DOUBLE_VALUE).matches(cursor));
   }
 
-  public void testWithRowDouble_columnIndexAndValueMatcher() {
+  @Test
+  public void withRowDouble_columnIndexAndValueMatcher() {
     assertTrue(withRowDouble(5, DOUBLE_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowDouble_columnNameAndValue() {
+  @Test
+  public void withRowDouble_columnNameAndValue() {
     assertTrue(withRowDouble(COLUMN_DOUBLE, DOUBLE_VALUE).matches(cursor));
   }
 
-  public void testWithRowDouble_columnNameAndValueMatcher() {
+  @Test
+  public void withRowDouble_columnNameAndValueMatcher() {
     assertTrue(withRowDouble(COLUMN_DOUBLE, DOUBLE_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowDouble_columnNameMatcherAndValueMatcher() {
+  @Test
+  public void withRowDouble_columnNameMatcherAndValueMatcher() {
     assertTrue(withRowDouble(is(COLUMN_DOUBLE), DOUBLE_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowDouble_ValueDoesNotMatch() {
+  @Test
+  public void withRowDouble_ValueDoesNotMatch() {
     assertFalse(withRowDouble(COLUMN_DOUBLE, -1d).matches(cursor));
   }
 
-  public void testWithRowString_columnIndexAndValue() {
+  @Test
+  public void withRowString_columnIndexAndValue() {
     assertTrue(withRowString(6, STRING_VALUE).matches(cursor));
   }
 
-  public void testWithRowString_columnIndexAndValueMatcher() {
+  @Test
+  public void withRowString_columnIndexAndValueMatcher() {
     assertTrue(withRowString(6, STRING_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowString_columnNameAndValue() {
+  @Test
+  public void withRowString_columnNameAndValue() {
     assertTrue(withRowString(COLUMN_STR, STRING_VALUE).matches(cursor));
   }
 
-  public void testWithRowString_columnNameAndValueMatcher() {
+  @Test
+  public void withRowString_columnNameAndValueMatcher() {
     assertTrue(withRowString(COLUMN_STR, STRING_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowString_columnNameMatcherAndValueMatcher() {
+  @Test
+  public void withRowString_columnNameMatcherAndValueMatcher() {
     assertTrue(withRowString(is(COLUMN_STR), STRING_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowString_ValueDoesNotMatch() {
+  @Test
+  public void withRowString_ValueDoesNotMatch() {
     assertFalse(withRowString(COLUMN_STR, "does not match").matches(cursor));
   }
 
-  public void testWithRowBlob_columnIndexAndValue() {
+  @Test
+  public void withRowBlob_columnIndexAndValue() {
     assertTrue(withRowBlob(7, BLOB_VALUE).matches(cursor));
   }
 
-  public void testWithRowBlob_columnIndexAndValueMatcher() {
+  @Test
+  public void withRowBlob_columnIndexAndValueMatcher() {
     assertTrue(withRowBlob(7, BLOB_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowBlob_columnNameAndValue() {
+  @Test
+  public void withRowBlob_columnNameAndValue() {
     assertTrue(withRowBlob(COLUMN_BLOB, BLOB_VALUE).matches(cursor));
   }
 
-  public void testWithRowBlob_columnNameAndValueMatcher() {
+  @Test
+  public void withRowBlob_columnNameAndValueMatcher() {
     assertTrue(withRowBlob(COLUMN_BLOB, BLOB_VALUE_MATCHER).matches(cursor));
   }
 
-  public void testWithRowBlob_columnNameMatcherAndValueMatcher() {
+  @Test
+  public void withRowBlob_columnNameMatcherAndValueMatcher() {
     assertTrue(withRowBlob(is(COLUMN_BLOB), BLOB_VALUE_MATCHER).matches(cursor));
   }
 
-
-  public void testWithRowBlob_ValueDoesNotMatch() {
+  @Test
+  public void withRowBlob_ValueDoesNotMatch() {
     assertFalse(withRowBlob(COLUMN_BLOB, "does not match".getBytes()).matches(cursor));
   }
 
-  public void testWrongNegativeColumnIndex() {
-    try {
-      withRowInt(-1, INTEGER_VALUE_MATCHER).matches(cursor);
-      fail("Expected IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      // Exception expected
-    }
+  @Test
+  public void wrongNegativeColumnIndex() {
+    expectedException.expect(IllegalArgumentException.class);
+    withRowInt(-1, INTEGER_VALUE_MATCHER).matches(cursor);
   }
 
-  public void testMergeCursor() {
+  @Test
+  public void mergeCursor() {
     Cursor c1 = makeCursor(new String[] {"one", "two"}, new Object[] {1, 2});
     Cursor c2 = makeCursor(new String[] {"three"}, new Object[] {3});
     MergeCursor mergeCursor = new MergeCursor(new Cursor[] {c1, c2});
@@ -295,10 +348,9 @@ public class CursorMatchersTest extends TestCase {
     assertFalse(withRowInt(3, 3).withStrictColumnChecks(false).matches(mergeCursor));
   }
 
-  @Override
-  protected void tearDown() throws Exception {
+  @After
+  public void tearDown() throws Exception {
     cursor.close();
-    super.tearDown();
   }
 
   /**

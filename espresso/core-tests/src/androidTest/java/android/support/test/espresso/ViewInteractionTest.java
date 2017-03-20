@@ -16,26 +16,38 @@
 
 package android.support.test.espresso;
 
+import static android.support.test.InstrumentationRegistry.getContext;
 import static com.google.common.base.Throwables.propagate;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.junit.rules.ExpectedException.none;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import android.support.test.runner.AndroidJUnit4;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitor;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.test.espresso.matcher.RootMatchers;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import android.test.AndroidTestCase;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.view.View;
 
 import org.hamcrest.Matcher;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -43,7 +55,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
 /** Unit tests for {@link ViewInteraction}. */
-public class ViewInteractionTest extends AndroidTestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class ViewInteractionTest {
   @Mock
   private ViewFinder mockViewFinder;
   @Mock
@@ -65,9 +79,11 @@ public class ViewInteractionTest extends AndroidTestCase {
   private Matcher<View> actionConstraint;
   private AtomicReference<Matcher<Root>> rootMatcherRef;
 
-  @Override
+  @Rule
+  public ExpectedException expectedException = none();
+
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     initMocks(this);
     realLifecycleMonitor = ActivityLifecycleMonitorRegistry.getInstance();
     rootView = new View(getContext());
@@ -84,27 +100,22 @@ public class ViewInteractionTest extends AndroidTestCase {
     };
   }
 
-  @Override
+  @After
   public void tearDown() throws Exception {
     ActivityLifecycleMonitorRegistry.registerInstance(realLifecycleMonitor);
-    super.tearDown();
   }
 
-  public void testPerformViewViolatesConstraints() {
+  @Test
+  public void performViewViolatesConstraints() {
     actionConstraint = not(viewMatcher);
     when(mockViewFinder.getView()).thenReturn(targetView);
     initInteraction();
-    try {
-      testInteraction.perform(mockAction);
-      fail("should propagate constraint violation!");
-    } catch (RuntimeException re) {
-      if (!PerformException.class.isAssignableFrom(re.getClass())) {
-        throw re;
-      }
-    }
+    expectedException.expect(PerformException.class);
+    testInteraction.perform(mockAction);
   }
 
-  public void testPerformPropagatesException() {
+  @Test
+  public void performPropagatesException() {
     RuntimeException exceptionToRaise = new RuntimeException();
     when(mockViewFinder.getView()).thenReturn(targetView);
     doThrow(exceptionToRaise)
@@ -120,7 +131,8 @@ public class ViewInteractionTest extends AndroidTestCase {
     }
   }
 
-  public void testCheckPropagatesException() {
+  @Test
+  public void checkPropagatesException() {
     RuntimeException exceptionToRaise = new RuntimeException();
     when(mockViewFinder.getView()).thenReturn(targetView);
     doThrow(exceptionToRaise)
@@ -137,7 +149,8 @@ public class ViewInteractionTest extends AndroidTestCase {
     }
   }
 
-  public void testPerformTwiceUpdatesPreviouslyMatched() {
+  @Test
+  public void performTwiceUpdatesPreviouslyMatched() {
     View firstView = new View(getContext());
     View secondView = new View(getContext());
     when(mockViewFinder.getView()).thenReturn(firstView);
@@ -154,7 +167,8 @@ public class ViewInteractionTest extends AndroidTestCase {
 
   }
 
-  public void testPerformAndCheck() {
+  @Test
+  public void performAndCheck() {
     when(mockViewFinder.getView()).thenReturn(targetView);
     initInteraction();
     testInteraction.perform(mockAction);
@@ -164,30 +178,31 @@ public class ViewInteractionTest extends AndroidTestCase {
     verify(mockAssertion).check(targetView, null);
   }
 
-  public void testCheck() {
+  @Test
+  public void checkTest() {
     when(mockViewFinder.getView()).thenReturn(targetView);
     initInteraction();
     testInteraction.check(mockAssertion);
     verify(mockAssertion).check(targetView, null);
   }
 
-  public void testInRootUpdatesRef() {
+  @Test
+  public void inRootUpdatesRef() {
     initInteraction();
     Matcher<Root> testMatcher = nullValue(Root.class);
     testInteraction.inRoot(testMatcher);
     assertEquals(testMatcher, rootMatcherRef.get());
   }
 
-  public void testInRoot_NullHandling() {
+  @Test
+  public void inRoot_NullHandling() {
     initInteraction();
-    try {
-      testInteraction.inRoot(null);
-      fail("should throw");
-    } catch (NullPointerException expected) {
-    }
+    expectedException.expect(NullPointerException.class);
+    testInteraction.inRoot(null);
   }
 
-  public void testCheck_ViewCannotBeFound() {
+  @Test
+  public void check_ViewCannotBeFound() {
     NoMatchingViewException noViewException = new NoMatchingViewException.Builder()
         .withViewMatcher(viewMatcher)
         .withRootView(rootView)
@@ -198,8 +213,9 @@ public class ViewInteractionTest extends AndroidTestCase {
     testInteraction.check(mockAssertion);
     verify(mockAssertion).check(null, noViewException);
   }
-  
-  public void testFailureHandler() {
+
+  @Test
+  public void failureHandler() {
     RuntimeException exceptionToRaise = new RuntimeException();
     when(mockViewFinder.getView()).thenReturn(targetView);
     doThrow(exceptionToRaise)

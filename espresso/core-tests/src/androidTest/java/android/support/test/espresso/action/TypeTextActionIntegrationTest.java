@@ -16,6 +16,18 @@
 
 package android.support.test.espresso.action;
 
+import android.support.test.espresso.PerformException;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.R;
+import android.support.test.testapp.SendActivity;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.pressImeActionButton;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
@@ -29,44 +41,35 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-
-import android.support.test.espresso.PerformException;
-import android.support.test.testapp.R;
-import android.support.test.testapp.SendActivity;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
-import android.test.suitebuilder.annotation.Suppress;
+import static org.junit.rules.ExpectedException.none;
 
 /**
  * {@link TypeTextAction} integration tests.
  */
 @LargeTest
-public class TypeTextActionIntegrationTest extends ActivityInstrumentationTestCase2<SendActivity> {
-  @SuppressWarnings("deprecation")
-  public TypeTextActionIntegrationTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", SendActivity.class);
-  }
+@RunWith(AndroidJUnit4.class)
+public class TypeTextActionIntegrationTest {
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
-  }
+  @Rule
+  public ExpectedException expectedException = none();
 
-  public void testTypeTextActionPerform() {
+  @Rule
+  public ActivityTestRule<SendActivity> rule = new ActivityTestRule<>(SendActivity.class);
+
+  @Test
+  public void typeTextActionPerform() {
     onView(withId(is(R.id.send_data_to_call_edit_text))).perform(typeText("Hello!"));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testTypeTextActionPerformWithEnter() {
+  @Test
+  public void typeTextActionPerformWithEnter() {
     onView(withId(R.id.enter_data_edit_text)).perform(typeText("Hello World!\n"));
     onView(allOf(withId(R.id.enter_data_response_text), withText("Hello World!")))
         .check(matches(isDisplayed()));
   }
 
-  public void testTypeTextInFocusedView() {
+  @Test
+  public void typeTextInFocusedView() {
     onView(withId(is(R.id.send_data_to_call_edit_text))).perform(typeText(
         "Hello World How Are You Today? I have alot of text to type."));
     onView(withId(is(R.id.send_data_to_call_edit_text))).perform(typeTextIntoFocusedView(
@@ -75,24 +78,17 @@ public class TypeTextActionIntegrationTest extends ActivityInstrumentationTestCa
         "Hello World How Are You Today? I have alot of text to type.Jolly good!")));
   }
 
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
-  public void testTypeTextInFocusedView_constraintBreakage() {
+  @Test
+  public void typeTextInFocusedView_constraintBreakage() {
     onView(withId(is(R.id.send_data_to_call_edit_text))).perform(typeText(
         "Hello World How Are You Today? I have alot of text to type."));
-    try {
-      onView(withId(is(R.id.edit_text_message)))
-          .perform(scrollTo(), typeTextIntoFocusedView("Jolly good!"));
-      fail("Should not have been able to type into focused view.");
-    } catch (PerformException expected) {
-    }
+    expectedException.expect(PerformException.class);
+    onView(withId(is(R.id.edit_text_message)))
+        .perform(scrollTo(), typeTextIntoFocusedView("Jolly good!"));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testTypeTextInDelegatedEditText() {
+  @Test
+  public void typeTextInDelegatedEditText() {
     String toType = "honeybadger doesn't care";
     onView(allOf(withParent(withId(R.id.delegating_edit_text)), withId(R.id.delegate_edit_text)))
         .perform(scrollTo(), typeText(toType), pressImeActionButton());
@@ -101,17 +97,11 @@ public class TypeTextActionIntegrationTest extends ActivityInstrumentationTestCa
       .check(matches(withText(containsString(toType))));
   }
 
-  /**
-   * Test only passes if run in isolation. Unless Gradle supports a single instrumentation
-   * per test this test is ignored"
-   */
-  @Suppress
+  @Test
   public void testTypeText_NonEnglish() {
-    try {
-      String toType = "在一个月之内的话";
-      onView(allOf(withParent(withId(R.id.delegating_edit_text)), withId(R.id.delegate_edit_text)))
-          .perform(scrollTo(), typeText(toType));
-      fail("expected the action above to fail.");
-    } catch (RuntimeException expected) {}
+    expectedException.expect(RuntimeException.class);
+    String toType = "在一个月之内的话";
+    onView(allOf(withParent(withId(R.id.delegating_edit_text)), withId(R.id.delegate_edit_text)))
+        .perform(scrollTo(), typeText(toType));
   }
 }

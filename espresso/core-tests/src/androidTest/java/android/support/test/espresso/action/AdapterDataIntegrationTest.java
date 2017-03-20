@@ -16,6 +16,18 @@
 
 package android.support.test.espresso.action;
 
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.LongListActivity;
+import android.support.test.testapp.R;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.util.Map;
+
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -23,38 +35,23 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.hasSibling;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
-
-import android.support.test.testapp.LongListActivity;
-import android.support.test.testapp.R;
-
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
-
-import java.util.Map;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 
 /**
  * Integration tests for operating on data displayed in an adapter.
  */
 @LargeTest
-public class AdapterDataIntegrationTest extends ActivityInstrumentationTestCase2<LongListActivity> {
-  @SuppressWarnings("deprecation")
-  public AdapterDataIntegrationTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", LongListActivity.class);
-  }
+@RunWith(AndroidJUnit4.class)
+public class AdapterDataIntegrationTest {
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
-  }
+  @Rule
+  public ActivityTestRule<LongListActivity> rule = new ActivityTestRule<>(LongListActivity.class);
 
-  @SuppressWarnings("unchecked")
-  public void testClickAroundList() {
+  @Test
+  public void clickAroundList() {
     onData(allOf(is(instanceOf(Map.class)), hasEntry(is(LongListActivity.STR), is("item: 99"))))
         .perform(click());
     onView(withId(R.id.selection_row_value))
@@ -66,7 +63,7 @@ public class AdapterDataIntegrationTest extends ActivityInstrumentationTestCase2
     onView(withId(R.id.selection_row_value))
         .check(matches(withText("1")));
 
-    onData(allOf(is(instanceOf(Map.class))))
+    onData(is(instanceOf(Map.class)))
         .atPosition(20)
         .perform(click());
 
@@ -83,8 +80,8 @@ public class AdapterDataIntegrationTest extends ActivityInstrumentationTestCase2
         .check(matches(withText("50")));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testSelectItemWithSibling() {
+  @Test
+  public void selectItemWithSibling() {
     onView(allOf(withText("7"), hasSibling(withText("item: 0"))))
         .perform(click());
     onView(withId(R.id.selection_row_value))

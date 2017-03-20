@@ -16,17 +16,21 @@
 
 package android.support.test.espresso.base;
 
-import android.support.test.espresso.IdlingResourceTimeoutException;
-import com.google.common.collect.Lists;
-
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.test.espresso.IdlingResourceTimeoutException;
+import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.util.Log;
 
-import junit.framework.TestCase;
+import com.google.common.collect.Lists;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -34,10 +38,17 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+
 /**
  * Unit test for {@link UiControllerImpl}.
  */
-public class UiControllerImplTest extends TestCase {
+@LargeTest
+@RunWith(AndroidJUnit4.class)
+public class UiControllerImplTest {
 
   private static final String TAG = UiControllerImplTest.class.getSimpleName();
 
@@ -83,9 +94,8 @@ public class UiControllerImplTest extends TestCase {
     }
   }
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     testThread = new LooperThread();
     testThread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
       @Override
@@ -125,14 +135,14 @@ public class UiControllerImplTest extends TestCase {
 
   }
 
-  @Override
+  @After
   public void tearDown() throws Exception {
     testThread.quitLooper();
     asyncPool.shutdown();
-    super.tearDown();
   }
 
-  public void testLoopMainThreadTillIdle_sendsMessageToRightHandler() {
+  @Test
+  public void loopMainThreadTillIdle_sendsMessageToRightHandler() {
     final CountDownLatch latch = new CountDownLatch(3);
     testThread.getHandler(); // blocks till initialized;
     final Handler firstHandler = new Handler(
@@ -184,7 +194,8 @@ public class UiControllerImplTest extends TestCase {
     }
   }
 
-  public void testLoopForAtLeast() throws Exception {
+  @Test
+  public void loopForAtLeast() throws Exception {
     final CountDownLatch latch = new CountDownLatch(2);
     assertTrue(testThread.getHandler().post(new Runnable() {
       @Override
@@ -204,7 +215,8 @@ public class UiControllerImplTest extends TestCase {
         latch.await(10, TimeUnit.SECONDS));
   }
 
-  public void testLoopMainThreadUntilIdle_fullQueue() {
+  @Test
+  public void loopMainThreadUntilIdle_fullQueue() {
     final CountDownLatch latch = new CountDownLatch(3);
     assertTrue(testThread.getHandler().post(new Runnable() {
       @Override
@@ -241,7 +253,8 @@ public class UiControllerImplTest extends TestCase {
     }
   }
 
-  public void testLoopMainThreadUntilIdle_fullQueueAndAsyncTasks() throws Exception {
+  @Test
+  public void loopMainThreadUntilIdle_fullQueueAndAsyncTasks() throws Exception {
     final CountDownLatch latch = new CountDownLatch(3);
     final CountDownLatch asyncTaskStarted = new CountDownLatch(1);
     final CountDownLatch asyncTaskShouldComplete = new CountDownLatch(1);
@@ -294,8 +307,8 @@ public class UiControllerImplTest extends TestCase {
     assertTrue("App should be idle.", latch.await(5, TimeUnit.SECONDS));
   }
 
-
-  public void testLoopMainThreadUntilIdle_emptyQueue() {
+  @Test
+  public void loopMainThreadUntilIdle_emptyQueue() {
     final CountDownLatch latch = new CountDownLatch(1);
     assertTrue(testThread.getHandler().post(new Runnable() {
       @Override
@@ -312,7 +325,8 @@ public class UiControllerImplTest extends TestCase {
     }
   }
 
-  public void testLoopMainThreadUntilIdle_oneIdlingResource() throws InterruptedException {
+  @Test
+  public void loopMainThreadUntilIdle_oneIdlingResource() throws InterruptedException {
     OnDemandIdlingResource fakeResource = new OnDemandIdlingResource("FakeResource");
     idlingResourceRegistry.registerResources(Lists.newArrayList(fakeResource));
     final CountDownLatch latch = new CountDownLatch(1);
@@ -330,7 +344,8 @@ public class UiControllerImplTest extends TestCase {
     assertTrue("App should be idle.", latch.await(5, TimeUnit.SECONDS));
   }
 
-  public void testLoopMainThreadUntilIdle_multipleIdlingResources() throws InterruptedException {
+  @Test
+  public void loopMainThreadUntilIdle_multipleIdlingResources() throws InterruptedException {
     OnDemandIdlingResource fakeResource1 = new OnDemandIdlingResource("FakeResource1");
     OnDemandIdlingResource fakeResource2 = new OnDemandIdlingResource("FakeResource2");
     OnDemandIdlingResource fakeResource3 = new OnDemandIdlingResource("FakeResource3");
@@ -360,8 +375,8 @@ public class UiControllerImplTest extends TestCase {
     assertTrue("App should be idle.", latch.await(5, TimeUnit.SECONDS));
   }
 
-  @LargeTest
-  public void testLoopMainThreadUntilIdle_timeout() throws InterruptedException {
+  @Test
+  public void loopMainThreadUntilIdle_timeout() throws InterruptedException {
     OnDemandIdlingResource goodResource =
         new OnDemandIdlingResource("GoodResource");
     OnDemandIdlingResource kindaCrappyResource =

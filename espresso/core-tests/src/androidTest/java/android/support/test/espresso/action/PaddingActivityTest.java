@@ -16,35 +16,33 @@
 
 package android.support.test.espresso.action;
 
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.PaddingActivity;
+import android.support.test.testapp.R;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 
-import android.support.test.testapp.PaddingActivity;
-import android.support.test.testapp.R;
-
-import android.test.ActivityInstrumentationTestCase2;
-
 /**
  * Tests padding within a scrollview.
  */
-public class PaddingActivityTest extends ActivityInstrumentationTestCase2<PaddingActivity> {
+@LargeTest
+@RunWith(AndroidJUnit4.class)
+public class PaddingActivityTest {
 
-  @SuppressWarnings("deprecation")
-  public PaddingActivityTest() {
-    // Supporting froyo.
-    super("android.support.test.testapp", PaddingActivity.class);
-  }
+  @Rule
+  public ActivityTestRule<PaddingActivity> rule = new ActivityTestRule<>(PaddingActivity.class);
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    getActivity();
-  }
-
-  @SuppressWarnings("unchecked")
-  public void testTextViewWithHugePadding() {
+  @Test
+  public void textViewWithHugePadding() {
     onView(withId(R.id.view_with_padding))
         .perform(scrollTo(), typeText("Hello World"));
   }

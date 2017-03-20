@@ -22,37 +22,40 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.Matchers.not;
 
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.support.test.testapp.LayoutIssuesActivity;
 import android.support.test.testapp.R;
 
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
 
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 /**
  * Integration tests for {@link LayoutMatchers}. Layout matchers depend on layout pass, thus tests
  * below depend on Espresso ability to wait for activity updates transparently to a user.
  */
 @LargeTest
-public class LayoutMatchersTest extends ActivityInstrumentationTestCase2<LayoutIssuesActivity> {
+@RunWith(AndroidJUnit4.class)
+public class LayoutMatchersTest {
 
-  public LayoutMatchersTest() {
-    super(LayoutIssuesActivity.class);
-  }
+  @Rule
+  public ActivityTestRule<LayoutIssuesActivity> rule =
+      new ActivityTestRule<>(LayoutIssuesActivity.class);
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    getActivity();
-  }
-
-  public void testEllipsizedTextMatcher() {
+  @Test
+  public void ellipsizedTextMatcher() {
     onView(withId(R.id.ellipsized)).check(
         matches(LayoutMatchers.hasEllipsizedText()));
     onView(withId(R.id.wrap)).check(
         matches(not(LayoutMatchers.hasEllipsizedText())));
   }
 
-  public void testMultilineTextMatcher() {
+  @Test
+  public void multilineTextMatcher() {
     onView(withId(R.id.ellipsized)).check(
         matches(not(LayoutMatchers.hasMultilineText())));
     onView(withId(R.id.wrap))

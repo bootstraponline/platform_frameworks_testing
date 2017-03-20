@@ -21,9 +21,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
+import static org.junit.rules.ExpectedException.none;
 
 import android.support.test.espresso.util.TreeIterables.DistanceRecordingTreeViewer;
 import android.support.test.espresso.util.TreeIterables.TreeViewer;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
+
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -33,13 +37,23 @@ import com.google.common.collect.Sets;
 
 import junit.framework.TestCase;
 
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /** Unit tests for {@link TreeIterables}. */
-public class TreeIterablesTest extends TestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class TreeIterablesTest {
+
+  @Rule
+  public ExpectedException expectedException = none();
 
   private static class TestElement {
     private final String data;
@@ -87,26 +101,25 @@ public class TreeIterablesTest extends TestCase {
             new TestElement("p"),
             new TestElement("q"))));
 
-  public void testDistanceRecorder_unknownItemThrowsException() {
+  @Test
+  public void distanceRecorder_unknownItemThrowsException() {
     final DistanceRecordingTreeViewer<TestElement> distanceRecorder =
         new DistanceRecordingTreeViewer<TestElement>(complexTree, new TestElementTreeViewer());
-    try {
-      distanceRecorder.getDistance(new TestElement("hello"));
-      fail("node should be unknown");
-    } catch (RuntimeException expected) { }
+    expectedException.expect(RuntimeException.class);
+    distanceRecorder.getDistance(new TestElement("hello"));
   }
 
-  public void testDistanceRecorder_unprocessedChildThrowsException() {
+  @Test
+  public void distanceRecorder_unprocessedChildThrowsException() {
     final DistanceRecordingTreeViewer<TestElement> distanceRecorder =
         new DistanceRecordingTreeViewer<TestElement>(complexTree, new TestElementTreeViewer());
 
-    try {
-      distanceRecorder.getDistance(complexTree.children.iterator().next());
-      fail("distance recorder hasnt processed this child yet, cannot know distance");
-    } catch (RuntimeException expected) { }
+    expectedException.expect(RuntimeException.class);
+    distanceRecorder.getDistance(complexTree.children.iterator().next());
   }
 
-  public void testDistanceRecorder_distanceKnownAfterChildrenCall() {
+  @Test
+  public void distanceRecorder_distanceKnownAfterChildrenCall() {
     final DistanceRecordingTreeViewer<TestElement> distanceRecorder =
         new DistanceRecordingTreeViewer<TestElement>(complexTree, new TestElementTreeViewer());
 
@@ -118,8 +131,8 @@ public class TreeIterablesTest extends TestCase {
     assertThat(distanceRecorder.getDistance(complexTree.children.iterator().next()), is(1));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testComplexTree_Distances() {
+  @Test
+  public void complexTree_Distances() {
     final DistanceRecordingTreeViewer<TestElement> distanceRecorder =
         new DistanceRecordingTreeViewer<TestElement>(complexTree, new TestElementTreeViewer());
     Iterable<TestElement> complexIterable = TreeIterables.depthFirstTraversal(complexTree,
@@ -160,7 +173,8 @@ public class TreeIterablesTest extends TestCase {
             "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q")));
   }
 
-  public void testComplexTraversal_depthFirst() {
+  @Test
+  public void complexTraversal_depthFirst() {
     List<String> breadthFirst = Lists.newArrayList(Iterables.transform(
         TreeIterables.depthFirstTraversal(complexTree, new TestElementTreeViewer()),
         new TestElementStringConvertor()));
@@ -169,7 +183,8 @@ public class TreeIterablesTest extends TestCase {
             "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q")));
   }
 
-  public void testComplexTraversal_breadthFirst() {
+  @Test
+  public void complexTraversal_breadthFirst() {
     List<String> breadthFirst = Lists.newArrayList(Iterables.transform(
         TreeIterables.breadthFirstTraversal(complexTree, new TestElementTreeViewer()),
         new TestElementStringConvertor()));
@@ -183,7 +198,8 @@ public class TreeIterablesTest extends TestCase {
             "k"))); //L5
   }
 
-  public void testTrivialTraversal_breadthFirst() {
+  @Test
+  public void trivialTraversal_breadthFirst() {
     // essentially the same as depth first.
     List<String> breadthFirst = Lists.newArrayList(Iterables.transform(
         TreeIterables.breadthFirstTraversal(trivialTree, new TestElementTreeViewer()),
@@ -191,15 +207,16 @@ public class TreeIterablesTest extends TestCase {
     assertThat(breadthFirst, is((List<String>) Lists.newArrayList("a", "b", "c", "d")));
   }
 
-  public void testTrivialTraversal_depthFirst() {
+  @Test
+  public void trivialTraversal_depthFirst() {
     List<String> depthFirst = Lists.newArrayList(Iterables.transform(
         TreeIterables.depthFirstTraversal(trivialTree, new TestElementTreeViewer()),
         new TestElementStringConvertor()));
     assertThat(depthFirst, is((List<String>) Lists.newArrayList("a", "b", "c", "d")));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testTrivial_distance() {
+  @Test
+  public void trivial_distance() {
     final DistanceRecordingTreeViewer<TestElement> distanceRecorder =
         new DistanceRecordingTreeViewer<TestElement>(trivialTree, new TestElementTreeViewer());
 

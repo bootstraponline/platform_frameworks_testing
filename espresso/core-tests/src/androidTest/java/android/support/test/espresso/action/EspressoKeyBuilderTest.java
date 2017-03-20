@@ -16,33 +16,42 @@
 
 package android.support.test.espresso.action;
 
-import android.support.test.espresso.action.EspressoKey.Builder;
-
 import android.os.Build;
+import android.support.test.espresso.action.EspressoKey.Builder;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.view.KeyEvent;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Unit tests for {@link Builder}.
  */
-public class EspressoKeyBuilderTest extends TestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class EspressoKeyBuilderTest {
 
   static final int KEY_CODE = KeyEvent.KEYCODE_X;
 
-  public void testBuildWithNoMetaState() {
+  @Test
+  public void buildWithNoMetaState() {
     EspressoKey key = new Builder().withKeyCode(KEY_CODE).build();
     assertEquals(KEY_CODE, key.getKeyCode());
     assertEquals(0, key.getMetaState());
   }
 
-  public void testBuildWithShiftPressed() {
+  @Test
+  public void buildWithShiftPressed() {
     EspressoKey key = new Builder().withKeyCode(KEY_CODE).withShiftPressed(true).build();
     assertEquals(KEY_CODE, key.getKeyCode());
     assertEquals(KeyEvent.META_SHIFT_ON, key.getMetaState());
   }
 
-  public void testBuildWithCtrlPressed() {
+  @Test
+  public void buildWithCtrlPressed() {
     EspressoKey key = new Builder().withKeyCode(KEY_CODE).withCtrlPressed(true).build();
     assertEquals(KEY_CODE, key.getKeyCode());
 
@@ -53,13 +62,15 @@ public class EspressoKeyBuilderTest extends TestCase {
     }
   }
 
-  public void testBuildWithAltPressed() {
+  @Test
+  public void buildWithAltPressed() {
     EspressoKey key = new Builder().withKeyCode(KEY_CODE).withAltPressed(true).build();
     assertEquals(KEY_CODE, key.getKeyCode());
     assertEquals(KeyEvent.META_ALT_ON, key.getMetaState());
   }
 
-  public void testBuildWithAllMetaKeysPressed() {
+  @Test
+  public void buildWithAllMetaKeysPressed() {
     EspressoKey key = new Builder().withKeyCode(KEY_CODE)
         .withShiftPressed(true)
         .withCtrlPressed(true)

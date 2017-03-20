@@ -16,21 +16,29 @@
 
 package android.support.test.espresso;
 
+import static android.support.test.InstrumentationRegistry.getContext;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 
+import android.support.test.runner.AndroidJUnit4;
 import android.test.AndroidTestCase;
+import android.test.suitebuilder.annotation.SmallTest;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /** Unit tests for {@link AmbiguousViewMatcherException}. */
-public class AmbiguousViewMatcherExceptionTest extends AndroidTestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class AmbiguousViewMatcherExceptionTest {
   private Matcher<View> alwaysTrueMatcher;
 
   private RelativeLayout testView;
@@ -39,9 +47,8 @@ public class AmbiguousViewMatcherExceptionTest extends AndroidTestCase {
   private View child3;
   private View child4;
 
-  @Override
+  @Before
   public void setUp() throws Exception {
-    super.setUp();
     alwaysTrueMatcher = notNullValue(View.class);
     testView = new RelativeLayout(getContext());
     child1 = new TextView(getContext());
@@ -58,14 +65,15 @@ public class AmbiguousViewMatcherExceptionTest extends AndroidTestCase {
     testView.addView(child4);
   }
 
-  public void testExceptionContainsMatcherDescription() {
+  @Test
+  public void exceptionContainsMatcherDescription() {
     StringBuilder matcherDescription = new StringBuilder();
     alwaysTrueMatcher.describeTo(new StringDescription(matcherDescription));
     assertThat(createException().getMessage(), containsString(matcherDescription.toString()));
   }
 
-  @SuppressWarnings("unchecked")
-  public void testExceptionContainsView() {
+  @Test
+  public void exceptionContainsView() {
     String exceptionMessage = createException().getMessage();
 
     assertThat("missing elements", exceptionMessage,
