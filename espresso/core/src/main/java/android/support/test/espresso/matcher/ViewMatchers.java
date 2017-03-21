@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.hamcrest.Matchers.is;
 
+import android.os.Build;
 import android.support.test.annotation.Beta;
 import android.support.test.espresso.util.HumanReadables;
 import com.google.common.base.Predicate;
@@ -1170,5 +1171,38 @@ public final class ViewMatchers {
   @Beta
   public static Matcher<View> hasBackground(final int drawableId) {
     return new HasBackgroundMatcher(drawableId);
+  }
+
+  /**
+   * Returns a matcher that matches {@link android.widget.TextView} based on it's color.
+   */
+  public static Matcher<View> hasTextColor(final int colorResId) {
+    return new BoundedMatcher<View, TextView>(TextView.class) {
+      private Context context;
+
+      @Override
+      protected boolean matchesSafely(TextView textView) {
+        context = textView.getContext();
+        int textViewColor = textView.getCurrentTextColor();
+        int expectedColor;
+
+        if (Build.VERSION.SDK_INT <= 22) {
+          expectedColor = context.getResources().getColor(colorResId);
+        } else {
+          expectedColor = context.getColor(colorResId);
+        }
+
+        return textViewColor == expectedColor;
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        String colorId = String.valueOf(colorResId);
+        if (context != null) {
+          colorId = context.getResources().getResourceName(colorResId);
+        }
+        description.appendText("has color with ID " + colorId);
+      }
+    };
   }
 }
