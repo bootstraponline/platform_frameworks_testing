@@ -159,8 +159,8 @@ public final class ViewMatchers {
         }
 
         Rect screen = getScreenWithoutStatusBarActionBar(view);
-        int viewHeight = (view.getHeight() > screen.height()) ? screen.height() : view.getHeight();
-        int viewWidth = (view.getWidth() > screen.width()) ? screen.width() : view.getWidth();
+        float viewHeight = Math.min(view.getHeight() * view.getScaleY(), screen.height());
+        float viewWidth = Math.min(view.getWidth() * view.getScaleX(), screen.width());
 
         double maxArea = viewHeight * viewWidth;
         double visibleArea = visibleParts.height() * visibleParts.width();
