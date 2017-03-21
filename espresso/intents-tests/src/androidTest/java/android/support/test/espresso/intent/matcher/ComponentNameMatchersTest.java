@@ -16,67 +16,81 @@
 
 package android.support.test.espresso.intent.matcher;
 
+import android.content.ComponentName;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.intent.matcher.ComponentNameMatchers.hasClassName;
 import static android.support.test.espresso.intent.matcher.ComponentNameMatchers.hasMyPackageName;
 import static android.support.test.espresso.intent.matcher.ComponentNameMatchers.hasPackageName;
 import static android.support.test.espresso.intent.matcher.ComponentNameMatchers.hasShortClassName;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-
-import android.support.test.InstrumentationRegistry;
-import android.content.ComponentName;
-
-import junit.framework.TestCase;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for {@link ComponentNameMatchers}.
  */
-public class ComponentNameMatchersTest extends TestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class ComponentNameMatchersTest {
 
   private static final String PKG = "com.some.wonderful.package.name";
   private static final String SHORT_CLASS_NAME = ".FooBar";
   private static final String CLS = PKG + SHORT_CLASS_NAME;
   private static final ComponentName c = new ComponentName(PKG, CLS);
 
-  public void testHasClassName() {
+  @Test
+  public void hasClassNameTesting() {
     assertTrue(hasClassName(CLS).matches(c));
     assertTrue(hasClassName(equalTo(CLS)).matches(c));
   }
 
-  public void testHasClassNameDoesNotMatch() {
+  @Test
+  public void hasClassNameDoesNotMatch() {
     assertFalse(hasClassName("not_there").matches(c));
     assertFalse(hasClassName(containsString("not there")).matches(c));
   }
 
-  public void testHasPackageName() {
+  @Test
+  public void hasPackageNameTesting() {
     assertTrue(hasPackageName(PKG).matches(c));
     assertTrue(hasPackageName(equalTo(PKG)).matches(c));
   }
 
-  public void testHasPackageNameDoesNotMatch() {
+  @Test
+  public void hasPackageNameDoesNotMatch() {
     assertFalse(hasPackageName("not_there").matches(c));
     assertFalse(hasPackageName(containsString(SHORT_CLASS_NAME)).matches(c));
   }
 
-  public void testHasShortClassName() {
+  @Test
+  public void hasShortClassNameTesting() {
     assertTrue(hasShortClassName(SHORT_CLASS_NAME).matches(c));
     assertTrue(hasShortClassName(equalTo(SHORT_CLASS_NAME)).matches(c));
   }
 
-  public void testHasShortClassNameDoesNotMatch() {
+  @Test
+  public void hasShortClassNameDoesNotMatch() {
     assertFalse(hasShortClassName("not_there").matches(c));
     assertFalse(hasShortClassName(equalTo(CLS)).matches(c));
   }
 
-  public void testHasMyPackageName() {
+  @Test
+  public void hasMyPackageNameTesting() {
     String targetPackage =
         InstrumentationRegistry.getTargetContext().getPackageName();
     ComponentName targetComponent = new ComponentName(targetPackage, targetPackage + ".SomeClass ");
     assertTrue(hasMyPackageName().matches(targetComponent));
   }
 
-  //This test will fail because PKG is not the target package for this instrumentation.
-  public void testHasMyPackageNameDoesNotMatch() {
+  @Test
+  public void hasMyPackageNameDoesNotMatch() {
     assertFalse(hasMyPackageName().matches(c));
   }
 }

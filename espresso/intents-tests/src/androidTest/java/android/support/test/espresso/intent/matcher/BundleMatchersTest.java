@@ -16,22 +16,30 @@
 
 package android.support.test.espresso.intent.matcher;
 
+import android.os.Bundle;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static android.support.test.espresso.intent.matcher.BundleMatchers.hasEntry;
 import static android.support.test.espresso.intent.matcher.BundleMatchers.hasKey;
 import static android.support.test.espresso.intent.matcher.BundleMatchers.hasValue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
-
-import android.os.Bundle;
-
-import junit.framework.TestCase;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for {@link BundleMatchers}.
  */
-public class BundleMatchersTest extends TestCase {
+@SmallTest
+@RunWith(AndroidJUnit4.class)
+public class BundleMatchersTest {
 
-  public void testHasEntry() {
+  @Test
+  public void hasEntryTesting() {
     Bundle bundle = new Bundle();
     bundle.putInt("key", 1);
 
@@ -40,7 +48,8 @@ public class BundleMatchersTest extends TestCase {
     assertTrue(hasEntry(equalTo("key"), equalTo(1)).matches(bundle));
   }
 
-  public void testHasEntryDoesNotMatch() {
+  @Test
+  public void hasEntryDoesNotMatch() {
     Bundle bundle = new Bundle();
     bundle.putInt("key", 1);
 
@@ -50,7 +59,8 @@ public class BundleMatchersTest extends TestCase {
     assertFalse(hasEntry(equalTo("key"), equalTo(2)).matches(bundle));
   }
 
-  public void testHasKey() {
+  @Test
+  public void hasKeyTesting() {
     Bundle bundle = new Bundle();
     bundle.putBoolean("key", true);
 
@@ -58,7 +68,8 @@ public class BundleMatchersTest extends TestCase {
     assertTrue(hasKey(equalTo("key")).matches(bundle));
   }
 
-  public void testHasKeyDoesNotMatch() {
+  @Test
+  public void hasKeyDoesNotMatch() {
     Bundle bundle = new Bundle();
     bundle.putBoolean("key", true);
 
@@ -66,7 +77,8 @@ public class BundleMatchersTest extends TestCase {
     assertFalse(hasKey(equalTo("keyy")).matches(bundle));
   }
 
-  public void testHasKeyWithMultipleEntries() {
+  @Test
+  public void hasKeyWithMultipleEntries() {
     Bundle bundle = new Bundle();
     bundle.putDouble("key", 10000000);
     bundle.putDouble("key1", 10000001);
@@ -76,7 +88,8 @@ public class BundleMatchersTest extends TestCase {
     assertTrue(hasKey(equalTo("key2")).matches(bundle));
   }
 
-  public void testHasValue() {
+  @Test
+  public void hasValueTesting() {
     Bundle bundle = new Bundle();
     Bundle value = new Bundle();
     value.putString("hello", "world");
@@ -86,7 +99,8 @@ public class BundleMatchersTest extends TestCase {
     assertTrue(hasValue(hasValue(equalTo("world"))).matches(bundle));
   }
 
-  public void testHasValueDoesNotMatch() {
+  @Test
+  public void hasValueDoesNotMatch() {
     Bundle bundle = new Bundle();
     Bundle value = new Bundle();
     value.putString("hello", "world");
@@ -96,7 +110,8 @@ public class BundleMatchersTest extends TestCase {
     assertFalse(hasValue(hasValue(equalTo("not_world"))).matches(bundle));
   }
 
-  public void testHasValueWithMultipleEntries() {
+  @Test
+  public void hasValueWithMultipleEntries() {
     Bundle bundle = new Bundle();
     bundle.putDouble("key", 10000000);
     bundle.putDouble("key1", 10000001);

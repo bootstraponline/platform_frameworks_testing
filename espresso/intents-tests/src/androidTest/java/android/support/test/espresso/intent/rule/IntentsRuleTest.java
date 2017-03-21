@@ -16,16 +16,17 @@
 
 package android.support.test.espresso.intent.rule;
 
-import org.junit.Test;
-import org.junit.runner.Description;
-import org.junit.runner.RunWith;
-import org.junit.runners.model.Statement;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.runner.intent.IntentStubberRegistry;
+import android.test.suitebuilder.annotation.MediumTest;
+
+import org.junit.Test;
+import org.junit.runner.Description;
+import org.junit.runner.RunWith;
+import org.junit.runners.model.Statement;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -33,6 +34,7 @@ import static org.junit.Assert.assertThat;
 /**
  * IntentsRule tests
  */
+@MediumTest
 @RunWith(AndroidJUnit4.class)
 public class IntentsRuleTest {
 

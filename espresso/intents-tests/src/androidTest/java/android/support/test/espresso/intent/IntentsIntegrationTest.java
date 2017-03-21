@@ -16,6 +16,32 @@
 
 package android.support.test.espresso.intent;
 
+import android.app.Activity;
+import android.app.Instrumentation.ActivityResult;
+import android.content.Intent;
+import android.os.Build;
+import android.support.test.espresso.intent.rule.IntentsTestRule;
+import android.support.test.filters.SdkSuppress;
+import android.support.test.runner.AndroidJUnit4;
+import android.support.test.testapp.R;
+import android.support.test.testapp.SendActivity;
+import android.test.suitebuilder.annotation.LargeTest;
+
+import junit.framework.AssertionFailedError;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.Espresso.pressBack;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static android.support.test.espresso.action.ViewActions.scrollTo;
+import static android.support.test.espresso.action.ViewActions.typeText;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.intent.Intents.assertNoUnverifiedIntents;
 import static android.support.test.espresso.intent.Intents.intended;
 import static android.support.test.espresso.intent.Intents.intending;
@@ -37,38 +63,13 @@ import static android.support.test.espresso.intent.matcher.UriMatchers.hasParamW
 import static android.support.test.espresso.intent.matcher.UriMatchers.hasPath;
 import static android.support.test.espresso.intent.matcher.UriMatchers.hasScheme;
 import static android.support.test.espresso.intent.matcher.UriMatchers.hasSchemeSpecificPart;
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.Espresso.pressBack;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.hasItem;
-
-import android.os.Build;
-import android.support.test.espresso.intent.rule.IntentsTestRule;
-import android.support.test.filters.SdkSuppress;
-import android.support.test.runner.AndroidJUnit4;
-import android.support.test.testapp.R;
-import android.support.test.testapp.SendActivity;
-
-import android.app.Activity;
-import android.app.Instrumentation.ActivityResult;
-import android.content.Intent;
-import android.test.suitebuilder.annotation.LargeTest;
-
-import junit.framework.AssertionFailedError;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.hamcrest.Matchers.not;
+import static org.junit.rules.ExpectedException.none;
 
 /**
  * Integration tests for {@Intents}.
@@ -79,6 +80,9 @@ public class IntentsIntegrationTest {
 
   @Rule
   public IntentsTestRule<SendActivity> mIntentsTestRule = new IntentsTestRule<>(SendActivity.class);
+
+  @Rule
+  public ExpectedException expectedException = none();
 
   @Before
   public void stubExternalIntents() {
@@ -134,19 +138,11 @@ public class IntentsIntegrationTest {
   @Test
   public void recordsIntentsOnlyAfterInit() {
     // Ensure that getActivity() in setUp() is not recorded by Intents
-    try {
-      intended(hasComponent(
-          hasShortClassName(".SendActivity")));
-
-      // Can't call fail() because it throws an AssertionFailedError, just like intended() does.
-      throw new IllegalStateException("intended should have failed: Intents shouldn't record "
-          + " SendActivity intent before init");
-    } catch (AssertionFailedError expected) {}
-
+    expectedException.expect(AssertionFailedError.class);
+    intended(hasComponent(hasShortClassName(".SendActivity")));
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void intentScheme() {
     String dialerPackage = "com.android.phone";
 
@@ -252,14 +248,12 @@ public class IntentsIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void externalIntentWithType() {
     onView(withId(R.id.send_message_button)).perform(scrollTo(), click());
     intended(allOf(hasAction(Intent.ACTION_SEND), hasType("text/plain")));
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   @SdkSuppress(minSdkVersion=10)
   public void customUriDataMatcher() {
     String uri = "https://www.google.com/search?q=Matcher&aq=f&oq=Matcher&sourceid=chrome&ie=UTF-8";
@@ -277,7 +271,6 @@ public class IntentsIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void customIntentMatcher_WithExternalIntent() {
     String uri = "http://www.google.com";
     sendUriToBrowser(uri);
@@ -293,7 +286,6 @@ public class IntentsIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void componentNameMatcher() {
     clickToDisplayActivity();
     intended(hasComponent(allOf(
