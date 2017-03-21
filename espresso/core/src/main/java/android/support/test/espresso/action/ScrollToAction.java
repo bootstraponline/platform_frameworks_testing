@@ -33,12 +33,13 @@ import android.graphics.Rect;
 import android.util.Log;
 import android.view.View;
 import android.widget.HorizontalScrollView;
+import android.widget.ListView;
 import android.widget.ScrollView;
 
 import org.hamcrest.Matcher;
 
 /**
- * Enables scrolling to the given view. View must be a descendant of a ScrollView.
+ * Enables scrolling to the given view. View must be a descendant of a ScrollView or ListView.
  */
 public final class ScrollToAction implements ViewAction {
   private static final String TAG = ScrollToAction.class.getSimpleName();
@@ -47,7 +48,10 @@ public final class ScrollToAction implements ViewAction {
   @Override
   public Matcher<View> getConstraints() {
     return allOf(withEffectiveVisibility(Visibility.VISIBLE), isDescendantOfA(anyOf(
-        isAssignableFrom(ScrollView.class), isAssignableFrom(HorizontalScrollView.class))));
+        isAssignableFrom(ScrollView.class),
+        isAssignableFrom(HorizontalScrollView.class),
+        isAssignableFrom(ListView.class)
+    )));
   }
 
   @Override

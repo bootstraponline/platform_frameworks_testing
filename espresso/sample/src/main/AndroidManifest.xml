@@ -44,6 +44,7 @@
         <activity android:name="GestureActivity" android:label="gesture activity" android:exported="true"/>
         <activity android:name="ScrollActivity" android:label="scroll activity" android:exported="true"/>
         <activity android:name="LongListActivity" android:label="list activity" android:exported="true"/>
+        <activity android:name="VeryLongListViewActivity" android:label="very long list activity"/>
         <activity android:name="CursorAdapterActivity" android:label="cursor adapter activity"/>
         <activity android:name="MenuActivity" android:label="menu activity"/>
         <activity android:name="FragmentStack" android:label="fragment stack activity"/>
