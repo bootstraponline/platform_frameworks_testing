@@ -1205,4 +1205,40 @@ public final class ViewMatchers {
       }
     };
   }
+
+  /**
+   * Returns a matcher that matches <b>first<b> {@link android.view.View} by
+   * given matcher.
+   *
+   * If there are multiple views with the same attributes present in view hierarchy, this matcher
+   * will only identify the first view from the view hierarchy.
+   *
+   * @param viewMatcher to match the view.
+   */
+  public static Matcher<View> thatMatchesFirst(final Matcher<View> viewMatcher) {
+    return new TypeSafeMatcher<View>() {
+
+      private boolean isFirstViewFound;
+
+      private View matchedView;
+
+      @Override
+      protected boolean matchesSafely(View view) {
+        if (isFirstViewFound) {
+          return matchedView == view;
+        }
+        isFirstViewFound = viewMatcher.matches(view);
+        if (isFirstViewFound) {
+          matchedView = view;
+        }
+        return isFirstViewFound;
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("that matches first");
+        viewMatcher.describeTo(description);
+      }
+    };
+  }
 }

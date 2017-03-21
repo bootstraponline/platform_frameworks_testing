@@ -36,6 +36,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
 import static android.support.test.espresso.matcher.ViewMatchers.isSelected;
 import static android.support.test.espresso.matcher.ViewMatchers.supportsInputMethods;
+import static android.support.test.espresso.matcher.ViewMatchers.thatMatchesFirst;
 import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
@@ -58,6 +59,7 @@ import static org.junit.rules.ExpectedException.none;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.test.annotation.UiThreadTest;
 import android.support.test.espresso.matcher.ViewMatchers.Visibility;
 import android.support.test.rule.UiThreadTestRule;
@@ -726,6 +728,18 @@ public class ViewMatchersTest {
   }
 
   @Test
+  public void firstMatchesByGivenMatcher() {
+    View firstViewWithId1 = createViewWithId(R.id.testId1);
+    View secondViewWithId1 = createViewWithId(R.id.testId1);
+
+    Matcher<View> id1FirstOccurrenceMatcher = thatMatchesFirst(withId(R.id.testId1));
+
+    assertTrue(id1FirstOccurrenceMatcher.matches(firstViewWithId1));
+    assertFalse(id1FirstOccurrenceMatcher.matches(secondViewWithId1));
+    assertTrue(id1FirstOccurrenceMatcher.matches(firstViewWithId1));
+  }
+
+  @Test
   public void withInputType_ReturnsTrueIf_CorrectInput() {
     EditText editText = new EditText(context);
     editText.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -746,4 +760,10 @@ public class ViewMatchersTest {
     assertFalse(withInputType(UNRECOGNIZED_INPUT_TYPE).matches(editText));
   }
 
+  @NonNull
+  private View createViewWithId(int viewId) {
+    View view = new View(context);
+    view.setId(viewId);
+    return view;
+  }
 }
